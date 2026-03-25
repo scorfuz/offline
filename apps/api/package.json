@@ -1,0 +1,27 @@
+{
+  "name": "@base-template/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "rm -rf dist && tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test --test-skip-pattern=dist",
+    "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
+    "db:migrate": "drizzle-kit migrate --config=drizzle.config.ts",
+    "db:seed": "tsx src/platform/db/seed-auth-dev.ts"
+  },
+  "dependencies": {
+    "@base-template/contracts": "workspace:*",
+    "better-auth": "^1.5.5",
+    "drizzle-orm": "^0.45.1",
+    "effect": "^3.14.4",
+    "pg": "^8.20.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.18.0",
+    "drizzle-kit": "^0.31.9",
+    "tsx": "^4.19.3"
+  }
+}

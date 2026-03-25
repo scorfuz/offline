@@ -1,0 +1,185 @@
+# Plan: Fresh Reusable Monorepo Template
+
+## Context
+
+Create a fresh, reusable pnpm monorepo template called `base-template` in `/Users/tim/projects/offline` based on the architecture of `/Users/tim/projects/pbar`. The template includes TanStack Start (web), Expo (mobile), a Node.js API with better-auth + Drizzle, Effect TS for contracts, and shared packages. All CRM-specific business logic is stripped — only the structural skeleton and auth plumbing remain.
+
+The `vendor/effect` directory from pbar is included as-is (local Effect fork).
+
+## Approach
+
+Copy the pbar monorepo structure, then gut all CRM domain code (accounts, opportunities, initiatives, activity, automation, audit, reporting, scorecards, pipeline). Keep: auth flow end-to-end (better-auth, login, session), RBAC system (roles, permissions, middleware, contracts), auth seed data (admin/member/manager users), and project-local agent skills. Replace `@pbar` branding with `@base-template`.
+
+### Naming convention
+- Package scope: `@base-template/*`
+- App name references: `base-template`
+
+## Structure
+
+```
+base-template/
+├── .pi/
+│   └── skills/         # Project-local agent skills (TanStack, React Doctor, Sweepi)
+├── apps/
+│   ├── api/            # Node.js HTTP server, better-auth, Drizzle, PostgreSQL, RBAC
+│   ├── web/            # TanStack Start + React + TailwindCSS v4
+│   └── mobile/         # Expo with expo-router
+├── packages/
+│   ├── contracts/      # Effect Schema types (auth + RBAC)
+│   ├── api-client/     # Typed fetch client (auth only)
+│   └── ui/             # Shared theme tokens
+├── vendor/
+│   └── effect/         # Local Effect repo clone (reference only, not in workspace)
+├── AGENTS.md           # Genericized project guide for AI agents
+├── package.json
+├── pnpm-workspace.yaml
+├── turbo.json
+├── tsconfig.base.json
+├── tsconfig.json
+├── .gitignore
+├── .prettierrc
+├── .editorconfig
+├── .lintstagedrc.json
+├── .env.example
+└── .husky/pre-commit
+```
+
+**Dropped from pbar:** `packages/domain` (CRM sample data only), `docs/`, `.github/workflows/ci.yml` (Neon-specific CI), `PLAN.md`, `solo.yml`, `to-fix.md`, `.planning/`.
+
+**Kept and genericized:** `AGENTS.md` (stripped of CRM-specific content), `.pi/skills/` (project-local agent skills copied as-is).
+
+## Files to Create/Modify
+
+### Root configs (copy from pbar, rebrand)
+- `package.json` — rename to `base-template`, update CI scripts to `@base-template/*` filter names, same devDependencies
+- `pnpm-workspace.yaml` — same as pbar (`apps/*`, `packages/*`), vendor/effect is NOT in workspace (uses npm effect)
+- `turbo.json` — same as pbar
+- `tsconfig.base.json` — same structure, update paths from `@pbar/*` → `@base-template/*`
+- `tsconfig.json` — same
+- `.gitignore` — same
+- `.prettierrc` — same
+- `.editorconfig` — same
+- `.lintstagedrc.json` — same
+- `.env.example` — same env vars, rebrand comments
+- `.husky/pre-commit` — same
+- `AGENTS.md` — copy from pbar, strip CRM-specific content (product description, CRM commands, planning artifacts section, CRM-specific vertical slices), keep: tech stack, monorepo structure, verified commands, env setup, important setup notes, verification matrix, vendored repos, generated files, common pitfalls, working conventions
+
+### `packages/contracts`  
+**Reuse from pbar:** `src/auth.ts` (Effect Schema UserRole, AuthSession types), `src/rbac.ts` (Permission, Resource, role permission mappings)
+- `package.json` — rename `@base-template/contracts`
+- `tsconfig.json` — same as pbar
+- `src/index.ts` — export auth types + RBAC types
+- `src/auth.ts` — copy, rename `rep` role → `member` in `UserRole` Schema literal
+- `src/rbac.ts` — copy from pbar, genericize: rename `rep` role → `member` (team member), remove CRM-specific Resource literals (`accounts`, `opportunities`, `automation`, `audit`), keep `users` as a baseline resource; keep the `hasPermission` function and `RolePermissions` structure
+
+### `packages/api-client`  
+**Reuse from pbar:** `src/auth.ts` (createAuthClient, login/logout/getCurrentUser)
+- `package.json` — rename `@base-template/api-client`, deps on `@base-template/contracts` only (drop `@pbar/domain`)
+- `tsconfig.json` — same
+- `src/index.ts` — export only auth client
+- `src/auth.ts` — copy, update import to `@base-template/contracts`
+
+### `packages/ui`  
+**Reuse from pbar:** `src/theme.ts` (full theme token system)
+- `package.json` — rename `@base-template/ui`
+- `tsconfig.json` — same
+- `src/index.ts` — export theme only (drop copy strings)
+- `src/theme.ts` — verbatim copy
+
+### `apps/api`  
+**Reuse from pbar:** auth system (better-auth config, auth schema, routes, session), RBAC middleware, platform layer (env, db client), health endpoint, auth seed data  
+**Dropped:** `accounts/`, `activity/`, `admin/` (CRM-specific parts), `audit/`, `automation/`, `initiatives/`, `opportunities/`, `support/`, all CRM seeds, all CRM schema files, `platform/audit/`, `platform/jobs/`
+
+- `package.json` — rename `@base-template/api`, deps: `@base-template/contracts`, `better-auth`, `drizzle-orm`, `effect`, `pg`
+- `tsconfig.json` — same
+- `drizzle.config.ts` — same pattern, updated import
+- `src/main.ts` — copy, rebrand log message to "base-template api"
+- `src/server.ts` — stripped to only health + auth routes, CORS, no CRM handlers, no automation job
+- `src/platform/env.ts` — verbatim copy
+- `src/platform/db/client.ts` — copy, schema import points to minimal auth-only schema
+- `src/platform/db/index.ts` — same
+- `src/platform/db/schema/index.ts` — export only auth tables (authUsers, authSessions, authAccounts, authVerifications)
+- `src/platform/db/schema/auth-schema.ts` — copy, update default role from `"rep"` → `"member"`
+- `src/platform/db/migrations/` — empty dir with `.gitkeep` (user runs `db:generate` fresh)
+- `src/platform/db/seed.ts` — extract only `seedAuthUser` function + `SeedUserInput` type (drop all CRM seed imports and `seedDevAuthUsers`), rename `rep` role → `member` in fixtures
+- `src/platform/db/seed-auth-dev.ts` — copy (creates test admin/member/manager users for development), rename `rep` → `member`
+- `src/auth/config.ts` — verbatim copy (better-auth + drizzle adapter setup)
+- `src/auth/index.ts` — same
+- `src/auth/routes.ts` — copy, remove audit log import/call from logout handler
+- `src/auth/session.ts` — verbatim copy
+- `src/auth/roles.ts` — verbatim copy (getUserRoleById)
+- `src/auth/authorize.ts` — verbatim copy (hasRequiredRole, assertAuthorized)
+- `src/middleware/rbac.ts` — copy from pbar, genericize Resource types to match contracts (remove CRM-specific resources), keep core RBAC enforcement functions (enforceRBAC, hasPermission, sendForbidden, sendUnauthorized, ownership helpers)
+- `src/routes/health.ts` — copy as-is
+
+### `apps/web`  
+**Reuse from pbar:** TanStack Start config (vite, nitro, router), auth flow (auth-client, login page, session), RBAC permissions helpers, shadcn UI primitives, styles.css, test setup  
+**Dropped:** All CRM pages (accounts, pipeline, initiatives, scorecards, reporting, admin, design gallery), all CRM components, CRM lib clients
+
+- `package.json` — rename `@base-template/web`, keep TanStack + React + Tailwind deps, reference `@base-template/*` packages
+- `tsconfig.json` — same
+- `vite.config.ts` — verbatim copy (tailwind, tanstack start, react, nitro plugins)
+- `nitro.config.ts` — verbatim copy
+- `vitest.config.ts` — verbatim copy
+- `scripts/generate-route-tree.mjs` — verbatim copy
+- `src/styles.css` — verbatim copy (Tailwind v4 theme integration)
+- `src/router.tsx` — copy, update imports
+- `src/components/app-providers.tsx` — verbatim copy
+- `src/routes/__root.tsx` — copy, update title to "base-template", update import to `@base-template/ui`
+- `src/routes/index.tsx` — new minimal authenticated landing page (shows user email, logout button)
+- `src/routes/login.tsx` — copy from pbar (renders LoginPage component directly)
+- `src/lib/auth-client.ts` — copy, update imports to `@base-template/*`
+- `src/lib/auth-session.ts` — copy if exists
+- `src/lib/query-keys.ts` — keep only `authKeys`
+- `src/lib/utils.ts` — copy `cn()` utility
+- `src/components/login-page.tsx` — copy from pbar, rebrand (remove CRM copy strings, update to generic "base-template" branding, remove `webDashboardCopy` import)
+- `src/components/ui/` — copy all 18 shadcn-style primitives (button, input, label, card, dialog, etc.)
+- `src/components/protected-route.tsx` — copy from pbar, simplify to just auth + basic role check (drop CRM-specific admin/audit/sales_ops wrappers, keep `ProtectedRoute` and `AccessDenied` components)
+- `src/lib/permissions.ts` — copy from pbar, genericize: rename `isRep` → `isMember`, update role display names (`rep` → `member` / "Team Member"); keep `isAdmin`, `isManager`, `isMember`, `canAccessAdmin`, `getRoleDisplayName`, `getRoleBadgeVariant`; drop CRM-specific checks like `canManageInitiatives`, `canViewReporting`, `getNavVisibility`, etc.
+- `src/test/setup.ts` — copy
+
+### `apps/mobile`
+- `package.json` — rename `@base-template/mobile`, deps on `@base-template/api-client`, `@base-template/contracts`, `@base-template/ui`
+- `tsconfig.json` — same
+- `app.json` — rebrand to `base-template`
+- `babel.config.js` — verbatim copy
+- `.gitignore` — same as pbar mobile
+- `app/_layout.tsx` — verbatim copy
+- `app/index.tsx` — simplified generic welcome screen using `@base-template/ui` theme tokens
+
+### `.pi/skills/` (project-local agent skills)
+- Copy entire directory as-is from pbar: `modern-python/`, `react-doctor/`, `sweepi/`, `tanstack-integration-best-practices/`, `tanstack-query-best-practices/`, `tanstack-router-best-practices/`, `tanstack-start-best-practices/`
+- These are generic development skills, not CRM-specific — no modifications needed
+
+### `vendor/effect`
+- Copy entire directory as-is from pbar (local clone of Effect monorepo for reference/contribution)
+- **Not** added to `pnpm-workspace.yaml` — the main project uses `effect` from npm, not from vendor. This matches pbar's approach.
+
+## Steps
+
+- [ ] 1. Initialize git repo with `git init`
+- [ ] 2. Create root configs: `package.json`, `pnpm-workspace.yaml`, `turbo.json`, `tsconfig.base.json`, `tsconfig.json`, `.gitignore`, `.prettierrc`, `.editorconfig`, `.lintstagedrc.json`, `.env.example`, `.husky/pre-commit`
+- [ ] 3. Create `AGENTS.md` — genericized version of pbar's AGENTS.md (strip CRM references, update `@pbar` → `@base-template`)
+- [ ] 4. Copy `vendor/effect/` directory from pbar as-is
+- [ ] 5. Copy `.pi/skills/` directory from pbar as-is (all project-local agent skills)
+- [ ] 6. Create `packages/contracts` — auth + RBAC types with Effect Schema
+- [ ] 7. Create `packages/ui` — shared theme tokens
+- [ ] 8. Create `packages/api-client` — typed auth fetch client
+- [ ] 9. Create `apps/api` — Node HTTP server with better-auth + Drizzle + RBAC middleware (auth-only schema, health endpoint, auth seed)
+- [ ] 10. Create `apps/web` — TanStack Start app with login flow, RBAC permissions, shadcn UI primitives, minimal index page
+- [ ] 11. Create `apps/mobile` — Expo app with generic welcome screen
+- [ ] 12. Run `pnpm install`
+- [ ] 13. Run `pnpm typecheck` — verify all packages compile
+- [ ] 14. Run `pnpm build` — verify builds pass
+- [ ] 15. Initial git commit
+
+## Verification
+
+1. `pnpm install` — no errors
+2. `pnpm typecheck` — all packages pass
+3. `pnpm build` — all packages build
+4. `pnpm --filter @base-template/api dev` — API starts (needs DATABASE_URL)
+5. `pnpm --filter @base-template/web dev` — Web app starts, shows login page
+6. `pnpm --filter @base-template/mobile dev` — Expo starts, shows welcome screen
+7. Auth flow + RBAC works end-to-end with a running PostgreSQL database
+8. `pnpm --filter @base-template/api db:seed` seeds admin/member/manager test users

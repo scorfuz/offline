@@ -1,0 +1,30 @@
+{
+  "name": "@base-template/mobile",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "dev": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "build": "expo export --platform web",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.28.6",
+    "@base-template/api-client": "workspace:*",
+    "@base-template/contracts": "workspace:*",
+    "@base-template/ui": "workspace:*",
+    "expo": "^52.0.28",
+    "expo-router": "^4.0.18",
+    "expo-status-bar": "~2.0.1",
+    "react": "^18.3.1",
+    "react-native": "^0.76.6",
+    "react-native-web": "~0.19.13"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12"
+  }
+}
