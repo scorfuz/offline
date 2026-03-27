@@ -9,6 +9,7 @@ import { loadEnv, type AppEnv } from "./platform/env";
 import { getHealthResponse } from "./routes/health";
 import { handleProjectRoutes } from "./routes/projects";
 import { handleCommentRoutes } from "./routes/comments";
+import { handleUserRoutes } from "./routes/users";
 
 export interface CreateServerOptions {
   env?: AppEnv;
@@ -89,6 +90,20 @@ export function createServer(options: CreateServerOptions = {}) {
     });
 
     if (handledCommentRoute) {
+      return;
+    }
+
+    const handledUserRoute = await handleUserRoutes({
+      auth,
+      database,
+      method: request.method ?? "GET",
+      pathname: url.pathname,
+      headers: new Headers(request.headers as Record<string, string>),
+      request,
+      response,
+    });
+
+    if (handledUserRoute) {
       return;
     }
 

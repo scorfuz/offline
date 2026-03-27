@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 
 import { getAuthSession } from "../lib/auth-session";
 import { useAuthSessionQuery, useLogoutMutation } from "../lib/auth-client";
@@ -53,8 +53,11 @@ function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">
-              This is the base template. Start building your app from here.
+              Manage field tech projects and assignments.
             </p>
+            <Link to="/projects">
+              <Button variant="default">Go to Projects</Button>
+            </Link>
             <Button
               variant="outline"
               onClick={() => {
