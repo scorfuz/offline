@@ -15,7 +15,7 @@ export const authUsers = pgTable(
     emailVerified: boolean("email_verified").notNull().default(false),
     displayName: text("display_name"),
     image: text("image"),
-    role: text("role").notNull().default("member"),
+    role: text("role").notNull().default("tech"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

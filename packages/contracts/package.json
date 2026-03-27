@@ -13,9 +13,9 @@
     "test": "tsx --test"
   },
   "dependencies": {
-    "effect": "^3.14.4"
+    "effect": "^3.21.0"
   },
   "devDependencies": {
-    "tsx": "^4.19.3"
+    "tsx": "^4.21.0"
   }
 }

@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-export const UserRole = Schema.Literal("member", "manager", "admin");
+export const UserRole = Schema.Literal("tech", "manager", "admin");
 
 export const AuthenticatedSession = Schema.Struct({
   type: Schema.Literal("authenticated"),

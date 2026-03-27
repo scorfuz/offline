@@ -12,8 +12,8 @@ export function isManager(role?: UserRoleType | null): boolean {
   return role === "manager";
 }
 
-export function isMember(role?: UserRoleType | null): boolean {
-  return role === "member";
+export function isTech(role?: UserRoleType | null): boolean {
+  return role === "tech";
 }
 
 // ============================================================================
@@ -38,8 +38,8 @@ export function getRoleDisplayName(role?: UserRoleType | null): string {
       return "Admin";
     case "manager":
       return "Manager";
-    case "member":
-      return "Team Member";
+    case "tech":
+      return "Tech";
     case undefined:
     case null:
       return "Unknown";
@@ -56,7 +56,7 @@ export function getRoleBadgeVariant(
       return "destructive";
     case "manager":
       return "secondary";
-    case "member":
+    case "tech":
     case undefined:
     case null:
       return "outline";

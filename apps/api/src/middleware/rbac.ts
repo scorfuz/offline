@@ -6,7 +6,7 @@ import { getUserRoleById } from "../auth/roles";
 // Types
 // ============================================================================
 
-export type UserRole = "admin" | "manager" | "member";
+export type UserRole = "admin" | "manager" | "tech";
 export type Permission = "create" | "read" | "update" | "delete" | "manage";
 export type Resource = "users";
 
@@ -29,7 +29,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Record<Resource, Permission[]>> = {
   manager: {
     users: ["read"],
   },
-  member: {
+  tech: {
     users: ["read"],
   },
 };
@@ -196,8 +196,8 @@ export function canEditOwnResource(
   // Manager can edit their team's resources (simplified)
   if (role === "manager") return true;
 
-  // Member can only edit their own
-  if (role === "member") return userId === resourceOwnerId;
+  // Tech can only edit their own
+  if (role === "tech") return userId === resourceOwnerId;
 
   return true;
 }

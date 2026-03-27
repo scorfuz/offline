@@ -6,7 +6,7 @@ import { hashPassword } from "better-auth/crypto";
 import type { DatabaseClient } from "./client";
 import { authAccounts, authUsers } from "./schema";
 
-export type SeedRole = "admin" | "member" | "manager";
+export type SeedRole = "admin" | "tech" | "manager";
 
 export type SeedUserInput = {
   email: string;

@@ -4,7 +4,7 @@ import { Schema } from "effect";
 export const DateFromString = Schema.DateFromString;
 
 // Role definitions
-export const UserRole = Schema.Literal("admin", "manager", "member");
+export const UserRole = Schema.Literal("admin", "manager", "tech");
 
 export type UserRole = typeof UserRole.Type;
 
@@ -77,8 +77,8 @@ export const RolePermissions: RolePermissionEntry[] = [
   // Manager: read users
   { role: "manager", resource: "users", permissions: ["read"] },
 
-  // Member: read users
-  { role: "member", resource: "users", permissions: ["read"] },
+  // Tech: read users
+  { role: "tech", resource: "users", permissions: ["read"] },
 ];
 
 // Check if a role has a specific permission on a resource

@@ -4,7 +4,13 @@
   "packageManager": "pnpm@10.6.3",
   "scripts": {
     "dev": "turbo dev",
+    "dev:api": "pnpm --filter @base-template/api dev",
+    "dev:web": "pnpm --filter @base-template/web dev",
+    "dev:mobile": "pnpm --filter @base-template/mobile dev",
     "build": "turbo build",
+    "build:api": "pnpm --filter @base-template/api build",
+    "build:web": "pnpm --filter @base-template/web build",
+    "build:mobile": "pnpm --filter @base-template/mobile build",
     "typecheck": "turbo typecheck",
     "lint": "turbo lint",
     "test": "turbo test",
@@ -12,11 +18,11 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@types/node": "^22.13.10",
+    "@types/node": "^25.5.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "prettier": "^3.8.1",
-    "turbo": "^2.4.4",
-    "typescript": "^5.8.2"
+    "turbo": "^2.8.20",
+    "typescript": "^5.9.3"
   }
 }

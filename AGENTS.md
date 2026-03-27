@@ -91,6 +91,7 @@ cp .env apps/mobile/.env
 
 ## Vendored Reference Repos
 
+- `/Users/tim/work/tanstack-db/examples` — TanStack DB example apps demonstrating offline-first patterns, sync adapters, optimistic mutations, and live queries. Use as reference when building offline-first features.
 - `vendor/effect/` — Effect TS monorepo, added as a **git subtree** (`--squash`) for agent reference.
 - Contains source code, patterns, and `AGENTS.md` with Effect's own coding conventions.
 - **Read-only**: Do not edit files in `vendor/`. It is excluded from pnpm workspace, tsconfig, and Turbo.
@@ -138,3 +139,46 @@ cp .env apps/mobile/.env
 - Current `lint` scripts are TypeScript checks, not a separate linter; do not assume ESLint, Biome, or Prettier are configured.
 - Current `test` scripts use `node --test` as a lightweight default; inspect package tests before assuming meaningful coverage exists.
 - When adding behavior, prefer adding focused tests where the package already has a clear pattern; if no test pattern exists, rely on typecheck/build verification and keep changes small.
+
+<!-- intent-skills:start -->
+
+# Skill mappings - when working in these areas, load the linked skill file into context.
+
+skills:
+
+- task: "Adding or editing routes"
+  load: "node_modules/.pnpm/@tanstack+router-core@1.168.4/node_modules/@tanstack/router-core/skills/router-core/SKILL.md"
+
+- task: "Auth guards and protected routes"
+  load: "node_modules/.pnpm/@tanstack+router-core@1.168.4/node_modules/@tanstack/router-core/skills/router-core/auth-and-guards/SKILL.md"
+
+- task: "Server functions and SSR"
+  load: "node_modules/.pnpm/@tanstack+start-client-core@1.167.4/node_modules/@tanstack/start-client-core/skills/start-core/SKILL.md"
+
+- task: "Adding new API endpoints"
+  load: "node_modules/.pnpm/@tanstack+start-client-core@1.167.4/node_modules/@tanstack/start-client-core/skills/start-core/server-routes/SKILL.md"
+
+- task: "Error handling and not-found pages"
+  load: "node_modules/.pnpm/@tanstack+router-core@1.168.4/node_modules/@tanstack/router-core/skills/router-core/not-found-and-errors/SKILL.md"
+
+- task: "Configuring the router plugin or code splitting"
+  load: "node*modules/.pnpm/@tanstack+router-plugin@1.167.5*@tanstack+react-router@1.168.4_react-dom@19.2.4_react@1_175b164fd3ea834698da6898e7b3d973/node_modules/@tanstack/router-plugin/skills/router-plugin/SKILL.md"
+
+- task: "Setting up TanStack DB collections"
+  load: "apps/web/node_modules/@tanstack/db/skills/db-core/SKILL.md"
+
+- task: "Configuring collection adapters (Electric, PowerSync, RxDB, Query, etc.)"
+  load: "apps/web/node_modules/@tanstack/db/skills/db-core/collection-setup/SKILL.md"
+
+- task: "Building live queries with TanStack DB"
+  load: "apps/web/node_modules/@tanstack/db/skills/db-core/live-queries/SKILL.md"
+
+- task: "Optimistic mutations and transactions with TanStack DB"
+  load: "apps/web/node_modules/@tanstack/db/skills/db-core/mutations-optimistic/SKILL.md"
+
+- task: "Building a custom TanStack DB adapter"
+  load: "apps/web/node_modules/@tanstack/db/skills/db-core/custom-adapter/SKILL.md"
+
+- task: "Integrating TanStack DB with TanStack Start (SSR, preloading)"
+load: "apps/web/node_modules/@tanstack/db/skills/meta-framework/SKILL.md"
+<!-- intent-skills:end -->

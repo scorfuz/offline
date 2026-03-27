@@ -19,15 +19,15 @@ export async function seedAdminAuthUser(env: AppEnv = loadEnv()) {
   }
 }
 
-export async function seedMemberAuthUser(env: AppEnv = loadEnv()) {
+export async function seedTechAuthUser(env: AppEnv = loadEnv()) {
   const database = createDatabaseClient(env);
 
   try {
     await seedAuthUser(database, {
-      email: "member@test.com",
+      email: "tech@test.com",
       password: "password1234",
-      role: "member",
-      displayName: "Team Member",
+      role: "tech",
+      displayName: "Tech",
     });
   } finally {
     await database.close();
@@ -52,8 +52,8 @@ export async function seedManagerAuthUser(env: AppEnv = loadEnv()) {
 async function run() {
   await seedAdminAuthUser();
   console.log("Seeded admin@test.com with admin role");
-  await seedMemberAuthUser();
-  console.log("Seeded member@test.com with member role");
+  await seedTechAuthUser();
+  console.log("Seeded tech@test.com with tech role");
   await seedManagerAuthUser();
   console.log("Seeded manager@test.com with manager role");
 }
