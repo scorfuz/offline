@@ -1,3 +1,5 @@
+import type { CurrentUserResponseType } from "@base-template/contracts";
+
 import type { DatabaseClient } from "../platform/db";
 import { getUserRoleById } from "./roles";
 
@@ -16,7 +18,7 @@ type SessionResult = {
 export async function getCurrentUserResponse(options: {
   database: DatabaseClient;
   session: SessionResult;
-}) {
+}): Promise<CurrentUserResponseType> {
   const { database, session } = options;
 
   if (session === null) {

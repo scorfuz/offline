@@ -1,4 +1,11 @@
-import type { AuthSession, UserRoleType } from "@base-template/contracts";
+import { ParseResult, Schema } from "effect";
+
+import {
+  type AuthSession,
+  CurrentUserResponse,
+  type CurrentUserResponseType,
+  LoginRequest,
+} from "@base-template/contracts";
 
 export interface AuthClientOptions {
   baseUrl: string;
@@ -9,28 +16,33 @@ export interface LoginCredentials {
   password: string;
 }
 
-// API response shape from backend
-interface ApiMeResponse {
-  authenticated: boolean;
-  user: {
-    id: string;
-    email: string;
-    displayName: string | null;
-    role: UserRoleType | null;
-  } | null;
-  session: {
-    id: string;
-    expiresAt: string;
-  } | null;
-}
-
 export interface AuthClient {
   getCurrentUser: () => Promise<AuthSession>;
   login: (credentials: LoginCredentials) => Promise<AuthSession>;
   logout: () => Promise<void>;
 }
 
-function transformApiResponse(apiResponse: ApiMeResponse): AuthSession {
+function decodeWithSchema<A, I>(
+  schema: Schema.Schema<A, I, any>,
+  input: unknown,
+  label: string
+): A {
+  try {
+    return Schema.decodeUnknownSync(schema as Schema.Schema<A, I, never>)(
+      input
+    );
+  } catch (error) {
+    if (ParseResult.isParseError(error)) {
+      throw new Error(`${label}: ${error.message}`);
+    }
+
+    throw error;
+  }
+}
+
+function transformApiResponse(
+  apiResponse: CurrentUserResponseType
+): AuthSession {
   if (apiResponse.authenticated && apiResponse.user) {
     return {
       type: "authenticated",
@@ -60,11 +72,20 @@ export function createAuthClient(options: AuthClientOptions): AuthClient {
         throw new Error(`Failed to get current user: ${response.status}`);
       }
 
-      const apiResponse = (await response.json()) as ApiMeResponse;
+      const apiResponse: CurrentUserResponseType = decodeWithSchema(
+        CurrentUserResponse,
+        await response.json(),
+        "Invalid auth session response"
+      );
       return transformApiResponse(apiResponse);
     },
 
     login: async (credentials: LoginCredentials) => {
+      const body: LoginCredentials = decodeWithSchema(
+        LoginRequest,
+        credentials,
+        "Invalid login request"
+      );
       const response = await fetch(`${baseUrl}/api/auth/login`, {
         method: "POST",
         credentials: "include",
@@ -72,7 +93,7 @@ export function createAuthClient(options: AuthClientOptions): AuthClient {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify(credentials),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
@@ -92,7 +113,11 @@ export function createAuthClient(options: AuthClientOptions): AuthClient {
         throw new Error("Login succeeded but failed to get session");
       }
 
-      const apiResponse = (await meResponse.json()) as ApiMeResponse;
+      const apiResponse: CurrentUserResponseType = decodeWithSchema(
+        CurrentUserResponse,
+        await meResponse.json(),
+        "Invalid auth session response"
+      );
       return transformApiResponse(apiResponse);
     },
 

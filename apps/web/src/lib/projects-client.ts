@@ -1,4 +1,13 @@
-import type { ProjectType } from "@base-template/contracts";
+import {
+  ApiSuccess,
+  CreateProjectRequest,
+  Project,
+  type ProjectType,
+  ProjectsResponse,
+  UpdateProjectRequest,
+  type UserSummaryType,
+  UsersResponse,
+} from "@base-template/contracts";
 import {
   queryOptions,
   useMutation,
@@ -27,12 +36,7 @@ export interface UpdateProjectInput {
   assignedTechId?: string | null;
 }
 
-export interface TechUser {
-  id: string;
-  email: string;
-  displayName: string | null;
-  role: string;
-}
+export type TechUser = UserSummaryType & { role: "tech" };
 
 // ---------------------------------------------------------------------------
 // Query options
@@ -41,14 +45,17 @@ export interface TechUser {
 export function projectsQueryOptions() {
   return queryOptions({
     queryKey: projectKeys.list(),
-    queryFn: () => apiFetch<ProjectType[]>("/api/projects"),
+    queryFn: () => apiFetch("/api/projects", ProjectsResponse),
   });
 }
 
 export function techUsersQueryOptions() {
   return queryOptions({
     queryKey: projectKeys.techs(),
-    queryFn: () => apiFetch<TechUser[]>("/api/users?role=tech"),
+    queryFn: async () => {
+      const users = await apiFetch("/api/users?role=tech", UsersResponse);
+      return users.filter((user): user is TechUser => user.role === "tech");
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes — user list rarely changes
   });
 }
@@ -69,7 +76,7 @@ export function useCreateProjectMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: CreateProjectInput) =>
-      apiPost<ProjectType>("/api/projects", input),
+      apiPost("/api/projects", Project, CreateProjectRequest, input),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: projectKeys.all });
     },
@@ -80,7 +87,7 @@ export function useUpdateProjectMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, ...input }: UpdateProjectInput & { id: string }) =>
-      apiPut<ProjectType>(`/api/projects/${id}`, input),
+      apiPut(`/api/projects/${id}`, Project, UpdateProjectRequest, input),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: projectKeys.all });
     },
@@ -90,8 +97,7 @@ export function useUpdateProjectMutation() {
 export function useDeleteProjectMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) =>
-      apiDelete<{ success: boolean }>(`/api/projects/${id}`),
+    mutationFn: (id: string) => apiDelete(`/api/projects/${id}`, ApiSuccess),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: projectKeys.all });
     },

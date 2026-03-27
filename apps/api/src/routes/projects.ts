@@ -2,6 +2,15 @@ import { randomUUID } from "node:crypto";
 
 import { eq } from "drizzle-orm";
 
+import {
+  ApiError,
+  ApiSuccess,
+  CreateProjectRequest,
+  Project,
+  ProjectsResponse,
+  UpdateProjectRequest,
+} from "@base-template/contracts";
+
 import { projects } from "../platform/db/schema";
 import { type RouteContext, requireAuth, sendJson, readBody } from "./shared";
 
@@ -54,7 +63,7 @@ function formatProject(row: typeof projects.$inferSelect) {
 async function handleListProjects(ctx: RouteContext): Promise<boolean> {
   const user = await requireAuth(ctx);
   if (!user) {
-    sendJson(ctx.response, 401, { error: "Unauthorized" });
+    sendJson(ctx.response, 401, ApiError, { error: "Unauthorized" });
     return true;
   }
 
@@ -72,7 +81,7 @@ async function handleListProjects(ctx: RouteContext): Promise<boolean> {
       .orderBy(projects.createdAt);
   }
 
-  sendJson(ctx.response, 200, rows.map(formatProject));
+  sendJson(ctx.response, 200, ProjectsResponse, rows.map(formatProject));
   return true;
 }
 
@@ -80,24 +89,19 @@ async function handleListProjects(ctx: RouteContext): Promise<boolean> {
 async function handleCreateProject(ctx: RouteContext): Promise<boolean> {
   const user = await requireAuth(ctx);
   if (!user) {
-    sendJson(ctx.response, 401, { error: "Unauthorized" });
+    sendJson(ctx.response, 401, ApiError, { error: "Unauthorized" });
     return true;
   }
 
   if (user.role !== "admin") {
-    sendJson(ctx.response, 403, { error: "Forbidden" });
+    sendJson(ctx.response, 403, ApiError, { error: "Forbidden" });
     return true;
   }
 
-  const body = (await readBody(ctx.request)) as {
-    title?: string;
-    description?: string;
-    status?: string;
-    assignedTechId?: string | null;
-  };
+  const body = await readBody(ctx.request, CreateProjectRequest);
 
   if (!body.title?.trim()) {
-    sendJson(ctx.response, 400, { error: "Title is required" });
+    sendJson(ctx.response, 400, ApiError, { error: "Title is required" });
     return true;
   }
 
@@ -118,7 +122,7 @@ async function handleCreateProject(ctx: RouteContext): Promise<boolean> {
     })
     .returning();
 
-  sendJson(ctx.response, 201, formatProject(rows[0]!));
+  sendJson(ctx.response, 201, Project, formatProject(rows[0]!));
   return true;
 }
 
@@ -129,7 +133,7 @@ async function handleUpdateProject(
 ): Promise<boolean> {
   const user = await requireAuth(ctx);
   if (!user) {
-    sendJson(ctx.response, 401, { error: "Unauthorized" });
+    sendJson(ctx.response, 401, ApiError, { error: "Unauthorized" });
     return true;
   }
 
@@ -139,21 +143,16 @@ async function handleUpdateProject(
     .where(eq(projects.id, projectId));
 
   if (!existing) {
-    sendJson(ctx.response, 404, { error: "Project not found" });
+    sendJson(ctx.response, 404, ApiError, { error: "Project not found" });
     return true;
   }
 
-  const body = (await readBody(ctx.request)) as {
-    title?: string;
-    description?: string;
-    status?: string;
-    assignedTechId?: string | null;
-  };
+  const body = await readBody(ctx.request, UpdateProjectRequest);
 
   // Tech can only update status on their own assigned project
   if (user.role === "tech") {
     if (existing.assignedTechId !== user.userId) {
-      sendJson(ctx.response, 403, { error: "Forbidden" });
+      sendJson(ctx.response, 403, ApiError, { error: "Forbidden" });
       return true;
     }
 
@@ -164,7 +163,7 @@ async function handleUpdateProject(
       body.assignedTechId !== undefined;
 
     if (hasNonStatusFields) {
-      sendJson(ctx.response, 403, {
+      sendJson(ctx.response, 403, ApiError, {
         error: "Techs can only update project status",
       });
       return true;
@@ -185,7 +184,7 @@ async function handleUpdateProject(
     .where(eq(projects.id, projectId))
     .returning();
 
-  sendJson(ctx.response, 200, formatProject(rows[0]!));
+  sendJson(ctx.response, 200, Project, formatProject(rows[0]!));
   return true;
 }
 
@@ -196,12 +195,12 @@ async function handleDeleteProject(
 ): Promise<boolean> {
   const user = await requireAuth(ctx);
   if (!user) {
-    sendJson(ctx.response, 401, { error: "Unauthorized" });
+    sendJson(ctx.response, 401, ApiError, { error: "Unauthorized" });
     return true;
   }
 
   if (user.role !== "admin") {
-    sendJson(ctx.response, 403, { error: "Forbidden" });
+    sendJson(ctx.response, 403, ApiError, { error: "Forbidden" });
     return true;
   }
 
@@ -211,10 +210,10 @@ async function handleDeleteProject(
     .returning();
 
   if (!deleted) {
-    sendJson(ctx.response, 404, { error: "Project not found" });
+    sendJson(ctx.response, 404, ApiError, { error: "Project not found" });
     return true;
   }
 
-  sendJson(ctx.response, 200, { success: true });
+  sendJson(ctx.response, 200, ApiSuccess, { success: true });
   return true;
 }

@@ -1,11 +1,32 @@
+import { ParseResult, Schema } from "effect";
+
 const API_BASE_URL: string =
   (import.meta.env.VITE_API_ORIGIN as string | undefined) ??
   "http://localhost:3001";
 
-export async function apiFetch<T>(
+function decodeWithSchema<A, I>(
+  schema: Schema.Schema<A, I, any>,
+  input: unknown,
+  label: string
+): A {
+  try {
+    return Schema.decodeUnknownSync(schema as Schema.Schema<A, I, never>)(
+      input
+    );
+  } catch (error) {
+    if (ParseResult.isParseError(error)) {
+      throw new Error(`${label}: ${error.message}`);
+    }
+
+    throw error;
+  }
+}
+
+export async function apiFetch<A, I>(
   path: string,
+  schema: Schema.Schema<A, I, never>,
   init?: RequestInit
-): Promise<T> {
+): Promise<A> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     credentials: "include",
     headers: {
@@ -20,25 +41,46 @@ export async function apiFetch<T>(
     throw new Error(text || `API error: ${response.status}`);
   }
 
-  return response.json() as Promise<T>;
+  return decodeWithSchema(
+    schema,
+    await response.json(),
+    `Invalid API response for ${path}`
+  );
 }
 
-export function apiPost<T>(path: string, body: unknown): Promise<T> {
-  return apiFetch<T>(path, {
+export function apiPost<A, I, BodyA, BodyI>(
+  path: string,
+  responseSchema: Schema.Schema<A, I, never>,
+  bodySchema: Schema.Schema<BodyA, BodyI, never>,
+  body: unknown
+): Promise<A> {
+  return apiFetch(path, responseSchema, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify(
+      decodeWithSchema(bodySchema, body, `Invalid API request for ${path}`)
+    ),
   });
 }
 
-export function apiPut<T>(path: string, body: unknown): Promise<T> {
-  return apiFetch<T>(path, {
+export function apiPut<A, I, BodyA, BodyI>(
+  path: string,
+  responseSchema: Schema.Schema<A, I, never>,
+  bodySchema: Schema.Schema<BodyA, BodyI, never>,
+  body: unknown
+): Promise<A> {
+  return apiFetch(path, responseSchema, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify(
+      decodeWithSchema(bodySchema, body, `Invalid API request for ${path}`)
+    ),
   });
 }
 
-export function apiDelete<T>(path: string): Promise<T> {
-  return apiFetch<T>(path, { method: "DELETE" });
+export function apiDelete<A, I>(
+  path: string,
+  schema: Schema.Schema<A, I, never>
+): Promise<A> {
+  return apiFetch(path, schema, { method: "DELETE" });
 }

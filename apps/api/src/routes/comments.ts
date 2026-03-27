@@ -2,6 +2,15 @@ import { randomUUID } from "node:crypto";
 
 import { eq } from "drizzle-orm";
 
+import {
+  ApiError,
+  ApiSuccess,
+  Comment,
+  CommentsResponse,
+  CreateCommentRequest,
+  UpdateCommentRequest,
+} from "@base-template/contracts";
+
 import { comments } from "../platform/db/schema";
 import { type RouteContext, requireAuth, sendJson, readBody } from "./shared";
 
@@ -61,7 +70,7 @@ async function handleListComments(
 ): Promise<boolean> {
   const user = await requireAuth(ctx);
   if (!user) {
-    sendJson(ctx.response, 401, { error: "Unauthorized" });
+    sendJson(ctx.response, 401, ApiError, { error: "Unauthorized" });
     return true;
   }
 
@@ -71,7 +80,7 @@ async function handleListComments(
     .where(eq(comments.projectId, projectId))
     .orderBy(comments.createdAt);
 
-  sendJson(ctx.response, 200, rows.map(formatComment));
+  sendJson(ctx.response, 200, CommentsResponse, rows.map(formatComment));
   return true;
 }
 
@@ -82,14 +91,14 @@ async function handleCreateComment(
 ): Promise<boolean> {
   const user = await requireAuth(ctx);
   if (!user) {
-    sendJson(ctx.response, 401, { error: "Unauthorized" });
+    sendJson(ctx.response, 401, ApiError, { error: "Unauthorized" });
     return true;
   }
 
-  const body = (await readBody(ctx.request)) as { text?: string };
+  const body = await readBody(ctx.request, CreateCommentRequest);
 
   if (!body.text?.trim()) {
-    sendJson(ctx.response, 400, { error: "Text is required" });
+    sendJson(ctx.response, 400, ApiError, { error: "Text is required" });
     return true;
   }
 
@@ -108,7 +117,7 @@ async function handleCreateComment(
     })
     .returning();
 
-  sendJson(ctx.response, 201, formatComment(rows[0]!));
+  sendJson(ctx.response, 201, Comment, formatComment(rows[0]!));
   return true;
 }
 
@@ -119,7 +128,7 @@ async function handleUpdateComment(
 ): Promise<boolean> {
   const user = await requireAuth(ctx);
   if (!user) {
-    sendJson(ctx.response, 401, { error: "Unauthorized" });
+    sendJson(ctx.response, 401, ApiError, { error: "Unauthorized" });
     return true;
   }
 
@@ -129,19 +138,19 @@ async function handleUpdateComment(
     .where(eq(comments.id, commentId));
 
   if (!existing) {
-    sendJson(ctx.response, 404, { error: "Comment not found" });
+    sendJson(ctx.response, 404, ApiError, { error: "Comment not found" });
     return true;
   }
 
   if (existing.authorId !== user.userId) {
-    sendJson(ctx.response, 403, { error: "Forbidden" });
+    sendJson(ctx.response, 403, ApiError, { error: "Forbidden" });
     return true;
   }
 
-  const body = (await readBody(ctx.request)) as { text?: string };
+  const body = await readBody(ctx.request, UpdateCommentRequest);
 
   if (!body.text?.trim()) {
-    sendJson(ctx.response, 400, { error: "Text is required" });
+    sendJson(ctx.response, 400, ApiError, { error: "Text is required" });
     return true;
   }
 
@@ -151,7 +160,7 @@ async function handleUpdateComment(
     .where(eq(comments.id, commentId))
     .returning();
 
-  sendJson(ctx.response, 200, formatComment(rows[0]!));
+  sendJson(ctx.response, 200, Comment, formatComment(rows[0]!));
   return true;
 }
 
@@ -162,7 +171,7 @@ async function handleDeleteComment(
 ): Promise<boolean> {
   const user = await requireAuth(ctx);
   if (!user) {
-    sendJson(ctx.response, 401, { error: "Unauthorized" });
+    sendJson(ctx.response, 401, ApiError, { error: "Unauthorized" });
     return true;
   }
 
@@ -172,17 +181,17 @@ async function handleDeleteComment(
     .where(eq(comments.id, commentId));
 
   if (!existing) {
-    sendJson(ctx.response, 404, { error: "Comment not found" });
+    sendJson(ctx.response, 404, ApiError, { error: "Comment not found" });
     return true;
   }
 
   if (existing.authorId !== user.userId) {
-    sendJson(ctx.response, 403, { error: "Forbidden" });
+    sendJson(ctx.response, 403, ApiError, { error: "Forbidden" });
     return true;
   }
 
   await ctx.database.db.delete(comments).where(eq(comments.id, commentId));
 
-  sendJson(ctx.response, 200, { success: true });
+  sendJson(ctx.response, 200, ApiSuccess, { success: true });
   return true;
 }

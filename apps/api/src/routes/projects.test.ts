@@ -346,4 +346,19 @@ describe("POST /api/projects", () => {
 
     assert.equal(res.status, 401);
   });
+
+  it("rejects invalid project payloads at the boundary", async () => {
+    const res = await api("/api/projects", {
+      method: "POST",
+      headers: { "content-type": "application/json", cookie: adminCookie },
+      body: JSON.stringify({
+        title: "Bad status",
+        status: "paused",
+      }),
+    });
+
+    assert.equal(res.status, 400);
+    const body = (await res.json()) as { error: string };
+    assert.match(body.error, /Invalid request body/);
+  });
 });

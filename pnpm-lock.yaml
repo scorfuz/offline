@@ -144,6 +144,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      effect:
+        specifier: ^3.21.0
+        version: 3.21.0
       lucide-react:
         specifier: ^1.7.0
         version: 1.7.0(react@19.2.4)
@@ -205,6 +208,9 @@ importers:
       "@base-template/contracts":
         specifier: workspace:*
         version: link:../contracts
+      effect:
+        specifier: ^3.21.0
+        version: 3.21.0
     devDependencies:
       tsx:
         specifier: ^4.21.0

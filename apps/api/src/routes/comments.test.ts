@@ -148,6 +148,18 @@ describe("POST /api/projects/:projectId/comments", () => {
     assert.equal(res.status, 400);
   });
 
+  it("rejects invalid comment payloads at the boundary", async () => {
+    const res = await api(`/api/projects/${testProjectId}/comments`, {
+      method: "POST",
+      headers: { "content-type": "application/json", cookie: adminCookie },
+      body: JSON.stringify({ text: 123 }),
+    });
+
+    assert.equal(res.status, 400);
+    const body = (await res.json()) as { error: string };
+    assert.match(body.error, /Invalid request body/);
+  });
+
   it("rejects unauthenticated request", async () => {
     const res = await api(`/api/projects/${testProjectId}/comments`, {
       method: "POST",
