@@ -11,6 +11,13 @@ export type {
   UnauthenticatedSession as UnauthenticatedSessionType,
 } from "./auth";
 
+export { ProjectStatus, Project, Comment } from "./projects";
+export type {
+  ProjectStatus as ProjectStatusType,
+  Project as ProjectType,
+  Comment as CommentType,
+} from "./projects";
+
 export {
   // RBAC exports
   UserRole as RbacUserRole,

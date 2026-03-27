@@ -7,6 +7,7 @@ import { createAuth, handleAuthRoutes } from "./auth";
 import { createDatabaseClient } from "./platform/db";
 import { loadEnv, type AppEnv } from "./platform/env";
 import { getHealthResponse } from "./routes/health";
+import { handleProjectRoutes } from "./routes/projects";
 
 export interface CreateServerOptions {
   env?: AppEnv;
@@ -59,6 +60,20 @@ export function createServer(options: CreateServerOptions = {}) {
     });
 
     if (handledAuthRoute) {
+      return;
+    }
+
+    const handledProjectRoute = await handleProjectRoutes({
+      auth,
+      database,
+      method: request.method ?? "GET",
+      pathname: url.pathname,
+      headers: new Headers(request.headers as Record<string, string>),
+      request,
+      response,
+    });
+
+    if (handledProjectRoute) {
       return;
     }
 

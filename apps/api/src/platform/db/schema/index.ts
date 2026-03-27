@@ -4,3 +4,5 @@ export {
   authUsers,
   authVerifications,
 } from "./auth-schema";
+
+export { comments, projects } from "./projects-schema";
