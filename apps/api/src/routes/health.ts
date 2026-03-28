@@ -1,7 +1,6 @@
-export interface HealthResponse {
-  ok: true;
-}
-
-export function getHealthResponse(): HealthResponse {
-  return { ok: true };
+export function getHealthResponse(): { status: string; timestamp: string } {
+  return {
+    status: "ok",
+    timestamp: new Date().toISOString(),
+  };
 }

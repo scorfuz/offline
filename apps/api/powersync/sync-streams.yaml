@@ -1,0 +1,68 @@
+# PowerSync Sync Streams Configuration (Beta)
+# Issue #5: PowerSync Cloud Setup + Sync Streams
+#
+# These streams control which data each user syncs to their device.
+# PowerSync reads the Postgres WAL for real-time change detection.
+#
+# ⚠️ MIGRATION NOTE: This replaces the legacy "sync rules" format.
+# Sync Streams use `streams:` instead of `bucket_definitions:`
+# and `auth.user_id()` instead of `request.user_id()`
+
+streams:
+  # Global stream for admin users - syncs all projects
+  admin_projects:
+    query: |
+      SELECT * FROM projects
+      WHERE auth.user_id() IN (
+        SELECT id FROM auth_users WHERE role = 'admin'
+      )
+    auto_subscribe: true
+
+  # Global stream for admin users - syncs all comments
+  admin_comments:
+    query: |
+      SELECT * FROM comments
+      WHERE auth.user_id() IN (
+        SELECT id FROM auth_users WHERE role = 'admin'
+      )
+    auto_subscribe: true
+
+  # Tech-scoped stream - only assigned projects
+  tech_projects:
+    query: |
+      SELECT * FROM projects
+      WHERE assigned_tech_id = auth.user_id()
+    auto_subscribe: true
+
+  # Comments scoped to visible projects for techs
+  tech_comments:
+    query: |
+      SELECT c.* FROM comments c
+      INNER JOIN projects p ON c.project_id = p.id
+      WHERE p.assigned_tech_id = auth.user_id()
+    auto_subscribe: true
+
+  # User profile stream - each user syncs their own profile
+  user_profile:
+    query: |
+      SELECT * FROM auth_users WHERE id = auth.user_id()
+    auto_subscribe: true
+
+# Sync Streams use the JWT token issued by /api/powersync/token
+# The token contains:
+#   - sub: user ID (accessible via auth.user_id())
+#   - role: admin | tech (accessible via auth.parameter('role'))
+#   - exp: expiration time
+#
+# Authentication is configured in PowerSync Cloud dashboard pointing to:
+#   POST /api/powersync/token
+#
+# PowerSync Cloud connects to the Postgres database and reads the WAL
+# for real-time change detection.
+#
+# For more details on Sync Streams vs legacy Sync Rules:
+# https://docs.powersync.com/sync/streams/migration
+
+# Required: Config edition for Sync Streams support
+config:
+  edition: 3 # Edition 3 enables latest Sync Streams features
