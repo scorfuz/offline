@@ -119,6 +119,11 @@ function readUrlWithDefault(
     return defaultValue;
   }
 
+  // Allow wildcard for CORS (dev mode)
+  if (value === "*") {
+    return value;
+  }
+
   try {
     return new URL(value).toString().replace(/\/$/u, "");
   } catch {
@@ -153,6 +158,10 @@ function readTrustedOrigins(
     .map((origin) => origin.trim())
     .filter((origin) => origin.length > 0)
     .map((origin) => {
+      // Allow wildcard for CORS
+      if (origin === "*") {
+        return origin;
+      }
       try {
         return new URL(origin).toString().replace(/\/$/u, "");
       } catch {
