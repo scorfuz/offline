@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 
 import type { ProjectType, ProjectStatusType } from "@base-template/contracts";
 
@@ -142,7 +143,13 @@ export function ProjectsPage() {
                 {projects.map((project) => (
                   <TableRow key={project.id}>
                     <TableCell className="font-medium">
-                      {project.title}
+                      <Link
+                        to="/projects/$projectId"
+                        params={{ projectId: project.id }}
+                        className="hover:underline"
+                      >
+                        {project.title}
+                      </Link>
                     </TableCell>
                     <TableCell>
                       <Badge variant={statusBadgeVariant(project.status)}>

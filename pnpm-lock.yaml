@@ -40,6 +40,9 @@ importers:
       effect:
         specifier: ^3.21.0
         version: 3.21.0
+      jose:
+        specifier: ^6.2.2
+        version: 6.2.2
       pg:
         specifier: ^8.20.0
         version: 8.20.0

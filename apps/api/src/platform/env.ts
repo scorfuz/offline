@@ -8,6 +8,7 @@ export interface AppEnv {
   webOrigin: string;
   betterAuthSecret: string;
   authTrustedOrigins: string[];
+  powersyncJwtSecret: string;
 }
 
 export interface LoadEnvOptions {
@@ -38,6 +39,10 @@ export function loadEnv(options: LoadEnvOptions = {}): AppEnv {
     authTrustedOrigins: readTrustedOrigins(
       rawEnv.AUTH_TRUSTED_ORIGINS,
       webOrigin
+    ),
+    powersyncJwtSecret: readRequired(
+      rawEnv.POWERSYNC_JWT_SECRET,
+      "POWERSYNC_JWT_SECRET"
     ),
   };
 }

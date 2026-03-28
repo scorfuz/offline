@@ -12,6 +12,7 @@ import { getHealthResponse } from "./routes/health";
 import { handleProjectRoutes } from "./routes/projects";
 import { handleCommentRoutes } from "./routes/comments";
 import { handleUserRoutes } from "./routes/users";
+import { handlePowersyncRoutes } from "./routes/powersync";
 import { RouteError, sendJson } from "./routes/shared";
 
 export interface CreateServerOptions {
@@ -55,7 +56,8 @@ export function createServer(options: CreateServerOptions = {}) {
         return;
       }
 
-      const handledAuthRoute = await handleAuthRoutes({
+      const routeCtx = {
+        env,
         auth,
         database,
         method: request.method ?? "GET",
@@ -63,49 +65,33 @@ export function createServer(options: CreateServerOptions = {}) {
         headers: new Headers(request.headers as Record<string, string>),
         request,
         response,
-      });
+      };
+
+      const handledAuthRoute = await handleAuthRoutes(routeCtx);
 
       if (handledAuthRoute) {
         return;
       }
 
-      const handledProjectRoute = await handleProjectRoutes({
-        auth,
-        database,
-        method: request.method ?? "GET",
-        pathname: url.pathname,
-        headers: new Headers(request.headers as Record<string, string>),
-        request,
-        response,
-      });
+      const handledPowersyncRoute = await handlePowersyncRoutes(routeCtx);
+
+      if (handledPowersyncRoute) {
+        return;
+      }
+
+      const handledProjectRoute = await handleProjectRoutes(routeCtx);
 
       if (handledProjectRoute) {
         return;
       }
 
-      const handledCommentRoute = await handleCommentRoutes({
-        auth,
-        database,
-        method: request.method ?? "GET",
-        pathname: url.pathname,
-        headers: new Headers(request.headers as Record<string, string>),
-        request,
-        response,
-      });
+      const handledCommentRoute = await handleCommentRoutes(routeCtx);
 
       if (handledCommentRoute) {
         return;
       }
 
-      const handledUserRoute = await handleUserRoutes({
-        auth,
-        database,
-        method: request.method ?? "GET",
-        pathname: url.pathname,
-        headers: new Headers(request.headers as Record<string, string>),
-        request,
-        response,
-      });
+      const handledUserRoute = await handleUserRoutes(routeCtx);
 
       if (handledUserRoute) {
         return;

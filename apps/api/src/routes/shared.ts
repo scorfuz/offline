@@ -3,11 +3,13 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { ParseResult, Schema } from "effect";
 
 import type { DatabaseClient } from "../platform/db";
+import type { AppEnv } from "../platform/env";
 import type { AppAuth } from "../auth/config";
 import { getSession } from "../auth/session";
 import { getUserRoleById } from "../auth/roles";
 
 export interface RouteContext {
+  env: AppEnv;
   auth: AppAuth;
   database: DatabaseClient;
   method: string;

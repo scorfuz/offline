@@ -49,6 +49,14 @@ export function projectsQueryOptions() {
   });
 }
 
+export function allUsersQueryOptions() {
+  return queryOptions({
+    queryKey: projectKeys.users(),
+    queryFn: () => apiFetch("/api/users", UsersResponse),
+    staleTime: 5 * 60 * 1000, // 5 minutes — user list rarely changes
+  });
+}
+
 export function techUsersQueryOptions() {
   return queryOptions({
     queryKey: projectKeys.techs(),
@@ -66,6 +74,17 @@ export function techUsersQueryOptions() {
 
 export function useProjectsQuery() {
   return useQuery(projectsQueryOptions());
+}
+
+export function useProjectQuery(projectId: string) {
+  return useQuery({
+    ...projectsQueryOptions(),
+    select: (projects) => projects.find((p) => p.id === projectId) ?? null,
+  });
+}
+
+export function useAllUsersQuery() {
+  return useQuery(allUsersQueryOptions());
 }
 
 export function useTechUsersQuery() {
