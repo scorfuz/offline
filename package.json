@@ -7,6 +7,7 @@
     "dev:api": "pnpm --filter @base-template/api dev",
     "dev:web": "pnpm --filter @base-template/web dev",
     "dev:mobile": "pnpm --filter @base-template/mobile dev",
+    "start:api": "pnpm --filter @base-template/api start",
     "build": "turbo build",
     "build:api": "pnpm --filter @base-template/api build",
     "build:web": "pnpm --filter @base-template/web build",

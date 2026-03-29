@@ -9,27 +9,46 @@
 
 ## Step 1: Prepare Your API for Railway
 
-### 1.1 Create railway.toml
+### 1.1 Use the API start script
 
-This file tells Railway how to build and run your API:
+This repo is a **pnpm workspace monorepo**, so Railway should run the API via pnpm scripts rather than `node dist/...` directly.
+
+`apps/api/package.json` now includes:
+
+```json
+"start": "tsx src/main.ts"
+```
+
+And `apps/api/railway.toml` uses:
 
 ```toml
 [build]
 builder = "nixpacks"
 
 [deploy]
-startCommand = "node dist/main.js"
-healthcheckPath = "/api/health"
+startCommand = "pnpm start"
+healthcheckPath = "/health"
 healthcheckTimeout = 100
 restartPolicyType = "on-failure"
 restartPolicyMaxRetries = 10
 ```
 
-### 1.2 Create Procfile (alternative to railway.toml)
+### 1.2 Important monorepo note
 
-```
-web: node dist/main.js
-```
+**Do not use** `tsx watch src/main.ts` in Railway.
+That is the development watcher and Railway will terminate it.
+
+If Railway asks for commands manually, use one of these setups:
+
+#### If Railway service root is `apps/api`
+
+- **Build command:** `pnpm build`
+- **Start command:** `pnpm start`
+
+#### If Railway service root is repo root
+
+- **Build command:** `pnpm --filter @base-template/api build`
+- **Start command:** `pnpm --filter @base-template/api start`
 
 ### 1.3 Verify Build Output
 
@@ -56,6 +75,8 @@ You'll need these secrets in Railway dashboard:
 | `DATABASE_URL`         | Postgres connection string             | `postgresql://user:pass@host:5432/db` |
 | `BETTER_AUTH_SECRET`   | Auth secret (generate new)             | `openssl rand -hex 32`                |
 | `POWERSYNC_JWT_SECRET` | PowerSync JWT secret (generate new)    | `openssl rand -hex 32`                |
+| `API_ORIGIN`           | Public base URL of this API            | `https://your-service.up.railway.app` |
+| `WEB_ORIGIN`           | Allowed web app origin for CORS        | `http://localhost:3000`               |
 | `NODE_ENV`             | Environment                            | `production`                          |
 | `PORT`                 | Port (Railway sets this automatically) | `${PORT}`                             |
 
@@ -96,10 +117,14 @@ Railway will automatically add `DATABASE_URL` to your environment.
 ### 4.4 Add Environment Variables
 
 ```bash
+railway variables set API_ORIGIN=https://your-service.up.railway.app
+railway variables set WEB_ORIGIN=http://localhost:3000
 railway variables set BETTER_AUTH_SECRET=your-secret-here
 railway variables set POWERSYNC_JWT_SECRET=your-secret-here
 railway variables set NODE_ENV=production
 ```
+
+> Set `WEB_ORIGIN` to your eventual Vercel URL after web deployment.
 
 ### 4.5 Deploy
 
@@ -109,9 +134,9 @@ railway up
 
 Railway will:
 
-1. Build your TypeScript (`npm run build`)
-2. Start the server (`node dist/main.js`)
-3. Run health checks
+1. Build your TypeScript (`pnpm build` or filtered build)
+2. Start the server (`pnpm start` or filtered start)
+3. Run health checks on `/health`
 
 ### 4.6 Get Your URL
 
@@ -146,7 +171,7 @@ railway domain add api.yourdomain.com
 Wait a few minutes for DNS propagation, then:
 
 ```bash
-curl https://api.yourdomain.com/api/health
+curl https://api.yourdomain.com/health
 ```
 
 ### 5.4 Enable Cloudflare Proxy (Optional)
@@ -200,6 +225,7 @@ Check the build logs in Railway dashboard. Common issues:
 ### "Service unhealthy"
 
 - Verify health check endpoint exists at `/health`
+- Verify Railway is using `pnpm start` or `pnpm --filter @base-template/api start`
 - Check logs: `railway logs`
 
 ### "Database connection failed"
