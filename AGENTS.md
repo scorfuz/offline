@@ -22,7 +22,7 @@ Project notes for future agents working in `base-template`.
 
 - **Web**: https://offline.sumisura.ca (Vercel)
 - **API**: https://base-templateapi-production.up.railway.app (Railway)
-- **PowerSync**: Self-hosted on Railway (`journeyapps/powersync-service` container)
+- **PowerSync**: https://powersync-production-f614.up.railway.app (self-hosted on Railway via `journeyapps/powersync-service` container)
 - **Database**: PostgreSQL on Railway (shared by API and PowerSync)
 
 ### Architecture
