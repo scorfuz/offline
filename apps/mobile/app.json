@@ -9,6 +9,9 @@
     "plugins": ["expo-router"],
     "experiments": {
       "typedRoutes": true
+    },
+    "ios": {
+      "bundleIdentifier": "com.anonymous.base-template"
     }
   }
 }
