@@ -16,6 +16,35 @@ Project notes for future agents working in `base-template`.
 - **shadcn/ui**: Headless UI components with Tailwind styling
 - **CSS Variables**: Theme tokens defined in `@base-template/ui`
 
+## Hosting & Deployment
+
+### URLs
+
+- **Web**: https://offline.sumisura.ca (Vercel)
+- **API**: https://base-templateapi-production.up.railway.app (Railway)
+- **PowerSync**: Self-hosted on Railway (`journeyapps/powersync-service` container)
+- **Database**: PostgreSQL on Railway (shared by API and PowerSync)
+
+### Architecture
+
+```
+[Web - Vercel]  ──fetch──▸  [API - Railway]  ──Drizzle──▸  [PostgreSQL - Railway]
+                                  │                                  ▲
+                                  │ issues JWT                       │ WAL replication
+                                  ▼                                  │
+                            [PowerSync - Railway] ──────────────────-┘
+                                  ▲
+                                  │ sync (WebSocket)
+                            [Web / Mobile clients]
+```
+
+- **API** serves REST endpoints, auth (better-auth with session cookies), and issues PowerSync JWTs at `POST /api/powersync/token`
+- **PowerSync** connects to Postgres via WAL for real-time change detection, uses Sync Streams (edition 3) for row-level security
+- **Config**: PowerSync uses `POWERSYNC_CONFIG_B64` env var (base64-encoded YAML) — source file at `powersync_config.b64`
+- **Auth flow**: Web/mobile clients get a JWT from the API, then use it to authenticate with PowerSync for sync
+- **Cross-origin cookies**: API must be on a subdomain of `sumisura.ca` (e.g. `api.sumisura.ca`) for session cookies to work with the web app. Better-Auth is configured with `crossSubDomainCookies` using the shared parent domain.
+- **Health checks**: PowerSync readiness probe is at `GET /probes/startup` on port 80. Set `PORT=80` in Railway for the PowerSync service.
+
 ## Apps
 
 - `apps/web`: TanStack Start frontend on Vite + Nitro + Tailwind CSS v4 + shadcn/ui

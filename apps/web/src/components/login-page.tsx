@@ -54,7 +54,7 @@ export function LoginPage() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(175,93,42,0.18),transparent_35%)]" />
           <div className="relative flex h-full flex-col justify-between gap-12">
             <div className="space-y-6">
-              <Badge className="w-fit">base-template</Badge>
+              <Badge className="w-fit">offline-test</Badge>
               <div className="space-y-4">
                 <h1 className="max-w-xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
                   Your starting point for full-stack apps
@@ -75,7 +75,7 @@ export function LoginPage() {
               <ValueCard
                 icon={<ShieldCheck className="size-4" />}
                 title="Auth & RBAC built in"
-                description="Sign in with the seeded dev account to validate the authenticated shell and session flow."
+                description="Role-based access control with admin, tech, and manager roles."
               />
             </div>
           </div>
@@ -90,7 +90,7 @@ export function LoginPage() {
               <div className="space-y-1.5">
                 <CardTitle className="text-3xl">Sign In</CardTitle>
                 <CardDescription>
-                  Use the seeded development credentials to get started.
+                  Enter your credentials to continue.
                 </CardDescription>
               </div>
             </CardHeader>
@@ -127,7 +127,7 @@ export function LoginPage() {
                           onChange={(event) =>
                             field.handleChange(event.target.value)
                           }
-                          placeholder="admin@test.com"
+                          placeholder="you@example.com"
                           autoFocus
                         />
                         {typeof fieldError === "string" ? (
@@ -164,7 +164,7 @@ export function LoginPage() {
                           onChange={(event) =>
                             field.handleChange(event.target.value)
                           }
-                          placeholder="password1234"
+                          placeholder="••••••••"
                         />
                         {typeof fieldError === "string" ? (
                           <p className="text-sm text-destructive">
@@ -193,11 +193,6 @@ export function LoginPage() {
                   <ArrowRight className="size-4" />
                 </Button>
               </form>
-
-              <div className="rounded-xl border border-dashed border-border/80 bg-secondary/60 p-4 text-sm text-muted-foreground">
-                <p className="font-medium text-foreground">Dev credentials</p>
-                <p>admin@test.com / password1234</p>
-              </div>
             </CardContent>
           </Card>
         </section>

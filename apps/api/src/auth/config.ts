@@ -12,8 +12,40 @@ import {
 
 export type DatabaseClient = ReturnType<typeof createDatabaseClient>;
 
+/**
+ * Extract a shared parent domain for cross-subdomain cookies.
+ * e.g. "https://api.sumisura.ca" -> ".sumisura.ca"
+ * Returns null for localhost or Railway default domains.
+ */
+function extractCookieDomain(apiOrigin: string): string | null {
+  try {
+    const hostname = new URL(apiOrigin).hostname;
+
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return null;
+    }
+
+    // Skip Railway's default domains — no shared parent with the web app
+    if (hostname.endsWith(".railway.app")) {
+      return null;
+    }
+
+    const parts = hostname.split(".");
+    if (parts.length < 2) {
+      return null;
+    }
+
+    // Return the parent domain (e.g. ".sumisura.ca" from "api.sumisura.ca")
+    return `.${parts.slice(-2).join(".")}`;
+  } catch {
+    return null;
+  }
+}
+
 export function createAuth(options: { env: AppEnv; database: DatabaseClient }) {
   const { env, database } = options;
+
+  const cookieDomain = extractCookieDomain(env.apiOrigin);
 
   return betterAuth({
     secret: env.betterAuthSecret,
@@ -41,6 +73,16 @@ export function createAuth(options: { env: AppEnv; database: DatabaseClient }) {
         password: "passwordHash",
       },
     },
+    ...(cookieDomain
+      ? {
+          advanced: {
+            crossSubDomainCookies: {
+              enabled: true,
+              domain: cookieDomain,
+            },
+          },
+        }
+      : {}),
   });
 }
 
