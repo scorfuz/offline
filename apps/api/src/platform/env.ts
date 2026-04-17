@@ -9,6 +9,7 @@ export interface AppEnv {
   betterAuthSecret: string;
   authTrustedOrigins: string[];
   powersyncJwtSecret: string;
+  powersyncJwtAudience: string;
 }
 
 export interface LoadEnvOptions {
@@ -18,7 +19,8 @@ export interface LoadEnvOptions {
 
 export function loadEnv(options: LoadEnvOptions = {}): AppEnv {
   const cwd = options.cwd ?? process.cwd();
-  const fileEnv = readEnvFile(join(cwd, ".env"));
+  const envFilePath = join(cwd, ".env");
+  const fileEnv = readEnvFile(envFilePath);
   const rawEnv = { ...fileEnv, ...process.env, ...options.env };
 
   const webOrigin = readUrlWithDefault(
@@ -44,6 +46,11 @@ export function loadEnv(options: LoadEnvOptions = {}): AppEnv {
       rawEnv.POWERSYNC_JWT_SECRET,
       "POWERSYNC_JWT_SECRET"
     ),
+    powersyncJwtAudience:
+      rawEnv.POWERSYNC_JWT_AUDIENCE &&
+      rawEnv.POWERSYNC_JWT_AUDIENCE.trim().length > 0
+        ? rawEnv.POWERSYNC_JWT_AUDIENCE
+        : "powersync-dev",
   };
 }
 
@@ -53,30 +60,29 @@ function readEnvFile(path: string): Record<string, string> {
   }
 
   const content = readFileSync(path, "utf8");
-  const entries: Record<string, string> = {};
-
-  for (const line of content.split(/\r?\n/u)) {
+  const lines = content.split(/\r?\n/u);
+  const entries = lines.reduce<Record<string, string>>((acc, line) => {
     const trimmedLine = line.trim();
 
     if (trimmedLine.length === 0 || trimmedLine.startsWith("#")) {
-      continue;
+      return acc;
     }
 
     const separatorIndex = trimmedLine.indexOf("=");
 
     if (separatorIndex === -1) {
-      continue;
+      return acc;
     }
 
     const key = trimmedLine.slice(0, separatorIndex).trim();
     const value = trimmedLine.slice(separatorIndex + 1).trim();
 
     if (key.length === 0) {
-      continue;
+      return acc;
     }
 
-    entries[key] = stripQuotes(value);
-  }
+    return { ...acc, [key]: stripQuotes(value) };
+  }, {});
 
   return entries;
 }
