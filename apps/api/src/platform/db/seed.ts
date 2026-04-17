@@ -9,6 +9,7 @@ import { authAccounts, authUsers } from "./schema";
 export type SeedRole = "admin" | "tech" | "manager";
 
 export type SeedUserInput = {
+  id?: string;
   email: string;
   password: string;
   role: SeedRole;
@@ -18,11 +19,12 @@ export type SeedUserInput = {
 export async function seedAuthUser(
   database: DatabaseClient,
   input: SeedUserInput
-): Promise<void> {
+): Promise<string> {
+  const userId = input.id ?? randomUUID();
   await database.db
     .insert(authUsers)
     .values({
-      id: randomUUID(),
+      id: userId,
       email: input.email,
       emailVerified: true,
       displayName: input.displayName,
@@ -37,10 +39,11 @@ export async function seedAuthUser(
       },
     });
 
+  const emailCondition = eq(authUsers.email, input.email);
   const [user] = await database.db
     .select({ id: authUsers.id })
     .from(authUsers)
-    .where(eq(authUsers.email, input.email));
+    .where(emailCondition);
 
   if (!user) {
     throw new Error(`Expected user to exist: ${input.email}`);
@@ -48,10 +51,11 @@ export async function seedAuthUser(
 
   const passwordHash = await hashPassword(input.password);
 
+  const accountId = randomUUID();
   await database.db
     .insert(authAccounts)
     .values({
-      id: randomUUID(),
+      id: accountId,
       accountId: input.email,
       providerId: "credential",
       userId: user.id,
@@ -64,4 +68,6 @@ export async function seedAuthUser(
         passwordHash,
       },
     });
+
+  return user.id;
 }

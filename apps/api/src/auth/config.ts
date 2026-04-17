@@ -19,7 +19,8 @@ export type DatabaseClient = ReturnType<typeof createDatabaseClient>;
  */
 function extractCookieDomain(apiOrigin: string): string | null {
   try {
-    const hostname = new URL(apiOrigin).hostname;
+    const parsedUrl = new URL(apiOrigin);
+    const hostname = parsedUrl.hostname;
 
     if (hostname === "localhost" || hostname === "127.0.0.1") {
       return null;
@@ -36,7 +37,8 @@ function extractCookieDomain(apiOrigin: string): string | null {
     }
 
     // Return the parent domain (e.g. ".sumisura.ca" from "api.sumisura.ca")
-    return `.${parts.slice(-2).join(".")}`;
+    const domainParts = parts.slice(-2);
+    return `.${domainParts.join(".")}`;
   } catch {
     return null;
   }
@@ -47,19 +49,21 @@ export function createAuth(options: { env: AppEnv; database: DatabaseClient }) {
 
   const cookieDomain = extractCookieDomain(env.apiOrigin);
 
+  const dbAdapter = drizzleAdapter(database.db, {
+    provider: "pg",
+    schema: {
+      user: authUsers,
+      session: authSessions,
+      account: authAccounts,
+      verification: authVerifications,
+    },
+  });
+
   return betterAuth({
     secret: env.betterAuthSecret,
     baseURL: `${env.apiOrigin}/api/auth`,
     trustedOrigins: env.authTrustedOrigins,
-    database: drizzleAdapter(database.db, {
-      provider: "pg",
-      schema: {
-        user: authUsers,
-        session: authSessions,
-        account: authAccounts,
-        verification: authVerifications,
-      },
-    }),
+    database: dbAdapter,
     emailAndPassword: {
       enabled: true,
     },

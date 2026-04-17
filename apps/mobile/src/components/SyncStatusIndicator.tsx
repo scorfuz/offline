@@ -9,7 +9,7 @@
 
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { theme } from "@base-template/ui";
+import { theme } from "@offline/ui";
 
 interface SyncStatusIndicatorProps {
   isConnected: boolean;

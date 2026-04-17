@@ -9,19 +9,19 @@ import {
   CommentsResponse,
   CreateCommentRequest,
   UpdateCommentRequest,
-} from "@base-template/contracts";
+} from "@offline/contracts";
 
 import { comments } from "../platform/db/schema";
 import { type RouteContext, requireAuth, sendJson, readBody } from "./shared";
 
-export async function handleCommentRoutes(ctx: RouteContext): Promise<boolean> {
+export async function routeComments(ctx: RouteContext): Promise<boolean> {
   const { method, pathname } = ctx;
 
   // GET /api/projects/:projectId/comments
   if (method === "GET") {
     const match = pathname.match(/^\/api\/projects\/([^/]+)\/comments$/);
     if (match) {
-      return handleListComments(ctx, match[1]!);
+      return listComments(ctx, match[1]!);
     }
   }
 
@@ -29,7 +29,7 @@ export async function handleCommentRoutes(ctx: RouteContext): Promise<boolean> {
   if (method === "POST") {
     const match = pathname.match(/^\/api\/projects\/([^/]+)\/comments$/);
     if (match) {
-      return handleCreateComment(ctx, match[1]!);
+      return createComment(ctx, match[1]!);
     }
   }
 
@@ -37,7 +37,7 @@ export async function handleCommentRoutes(ctx: RouteContext): Promise<boolean> {
   if (method === "PUT") {
     const match = pathname.match(/^\/api\/comments\/([^/]+)$/);
     if (match) {
-      return handleUpdateComment(ctx, match[1]!);
+      return updateComment(ctx, match[1]!);
     }
   }
 
@@ -45,7 +45,7 @@ export async function handleCommentRoutes(ctx: RouteContext): Promise<boolean> {
   if (method === "DELETE") {
     const match = pathname.match(/^\/api\/comments\/([^/]+)$/);
     if (match) {
-      return handleDeleteComment(ctx, match[1]!);
+      return deleteComment(ctx, match[1]!);
     }
   }
 
@@ -64,7 +64,7 @@ function formatComment(row: typeof comments.$inferSelect) {
 }
 
 // GET /api/projects/:projectId/comments
-async function handleListComments(
+async function listComments(
   ctx: RouteContext,
   projectId: string
 ): Promise<boolean> {
@@ -80,12 +80,13 @@ async function handleListComments(
     .where(eq(comments.projectId, projectId))
     .orderBy(comments.createdAt);
 
-  sendJson(ctx.response, 200, CommentsResponse, rows.map(formatComment));
+  const formattedComments = rows.map(formatComment);
+  sendJson(ctx.response, 200, CommentsResponse, formattedComments);
   return true;
 }
 
 // POST /api/projects/:projectId/comments
-async function handleCreateComment(
+async function createComment(
   ctx: RouteContext,
   projectId: string
 ): Promise<boolean> {
@@ -117,12 +118,13 @@ async function handleCreateComment(
     })
     .returning();
 
-  sendJson(ctx.response, 201, Comment, formatComment(rows[0]!));
+  const created = formatComment(rows[0]!);
+  sendJson(ctx.response, 201, Comment, created);
   return true;
 }
 
 // PUT /api/comments/:id
-async function handleUpdateComment(
+async function updateComment(
   ctx: RouteContext,
   commentId: string
 ): Promise<boolean> {
@@ -160,12 +162,13 @@ async function handleUpdateComment(
     .where(eq(comments.id, commentId))
     .returning();
 
-  sendJson(ctx.response, 200, Comment, formatComment(rows[0]!));
+  const updated = formatComment(rows[0]!);
+  sendJson(ctx.response, 200, Comment, updated);
   return true;
 }
 
 // DELETE /api/comments/:id
-async function handleDeleteComment(
+async function deleteComment(
   ctx: RouteContext,
   commentId: string
 ): Promise<boolean> {

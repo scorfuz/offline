@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 
-import { CurrentUserResponse, LoginRequest } from "@base-template/contracts";
+import { CurrentUserResponse, LoginRequest } from "@offline/contracts";
 
 import type { DatabaseClient } from "../platform/db";
 import type { AppAuth } from "./config";
@@ -8,7 +8,7 @@ import { getCurrentUserResponse } from "./current-user";
 import { getSession } from "./session";
 import { readBody, sendJson } from "../routes/shared";
 
-export async function handleAuthRoutes(options: {
+export async function routeAuth(options: {
   auth: AppAuth;
   database: DatabaseClient;
   method: string;

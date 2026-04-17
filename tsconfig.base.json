@@ -18,9 +18,9 @@
     "types": ["node"],
     "baseUrl": ".",
     "paths": {
-      "@base-template/api-client": ["packages/api-client/src/index.ts"],
-      "@base-template/contracts": ["packages/contracts/src/index.ts"],
-      "@base-template/ui": ["packages/ui/src/index.ts"]
+      "@offline/api-client": ["packages/api-client/src/index.ts"],
+      "@offline/contracts": ["packages/contracts/src/index.ts"],
+      "@offline/ui": ["packages/ui/src/index.ts"]
     }
   }
 }

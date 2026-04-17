@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 
-import type { ProjectType, ProjectStatusType } from "@base-template/contracts";
+import type { ProjectType } from "@offline/contracts";
 
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";

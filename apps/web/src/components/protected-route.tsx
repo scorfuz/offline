@@ -1,5 +1,5 @@
 import { Navigate, useRouter } from "@tanstack/react-router";
-import type { UserRoleType } from "@base-template/contracts";
+import type { UserRoleType } from "@offline/contracts";
 import { useAuthSessionQuery } from "../lib/auth-client";
 
 // ============================================================================

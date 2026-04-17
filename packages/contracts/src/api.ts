@@ -22,25 +22,31 @@ export const LoginRequest = Schema.Struct({
 
 export type LoginRequest = typeof LoginRequest.Type;
 
+const authenticatedLiteral = Schema.Literal(true);
+const sessionStruct = Schema.Struct({
+  id: Schema.String,
+  expiresAt: Schema.String,
+});
+const nullableDisplayName = Schema.NullOr(Schema.String);
+const nullableAuthUserRole = Schema.NullOr(AuthUserRole);
+const authenticatedUserStruct = Schema.Struct({
+  id: Schema.String,
+  email: Schema.String,
+  displayName: nullableDisplayName,
+  role: nullableAuthUserRole,
+});
 export const AuthenticatedCurrentUserResponse = Schema.Struct({
-  authenticated: Schema.Literal(true),
-  session: Schema.Struct({
-    id: Schema.String,
-    expiresAt: Schema.String,
-  }),
-  user: Schema.Struct({
-    id: Schema.String,
-    email: Schema.String,
-    displayName: Schema.NullOr(Schema.String),
-    role: Schema.NullOr(AuthUserRole),
-  }),
+  authenticated: authenticatedLiteral,
+  session: sessionStruct,
+  user: authenticatedUserStruct,
 });
 
 export type AuthenticatedCurrentUserResponse =
   typeof AuthenticatedCurrentUserResponse.Type;
 
+const unauthenticatedLiteral = Schema.Literal(false);
 export const UnauthenticatedCurrentUserResponse = Schema.Struct({
-  authenticated: Schema.Literal(false),
+  authenticated: unauthenticatedLiteral,
   session: Schema.Null,
   user: Schema.Null,
 });
@@ -55,20 +61,24 @@ export const CurrentUserResponse = Schema.Union(
 
 export type CurrentUserResponse = typeof CurrentUserResponse.Type;
 
+const optionalString = Schema.optional(Schema.String);
+const optionalProjectStatus = Schema.optional(ProjectStatus);
+const optionalNullableString = Schema.optional(Schema.NullOr(Schema.String));
+
 export const CreateProjectRequest = Schema.Struct({
   title: Schema.String,
-  description: Schema.optional(Schema.String),
-  status: Schema.optional(ProjectStatus),
-  assignedTechId: Schema.optional(Schema.NullOr(Schema.String)),
+  description: optionalString,
+  status: optionalProjectStatus,
+  assignedTechId: optionalNullableString,
 });
 
 export type CreateProjectRequest = typeof CreateProjectRequest.Type;
 
 export const UpdateProjectRequest = Schema.Struct({
-  title: Schema.optional(Schema.String),
-  description: Schema.optional(Schema.String),
-  status: Schema.optional(ProjectStatus),
-  assignedTechId: Schema.optional(Schema.NullOr(Schema.String)),
+  title: optionalString,
+  description: optionalString,
+  status: optionalProjectStatus,
+  assignedTechId: optionalNullableString,
 });
 
 export type UpdateProjectRequest = typeof UpdateProjectRequest.Type;
@@ -96,8 +106,8 @@ export type CommentsResponse = typeof CommentsResponse.Type;
 export const UserSummary = Schema.Struct({
   id: Schema.String,
   email: Schema.String,
-  displayName: Schema.NullOr(Schema.String),
-  role: Schema.NullOr(AuthUserRole),
+  displayName: nullableDisplayName,
+  role: nullableAuthUserRole,
 });
 
 export type UserSummary = typeof UserSummary.Type;

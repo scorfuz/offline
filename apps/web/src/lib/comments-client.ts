@@ -4,7 +4,7 @@ import {
   CommentsResponse,
   CreateCommentRequest,
   UpdateCommentRequest,
-} from "@base-template/contracts";
+} from "@offline/contracts";
 import {
   queryOptions,
   useMutation,
@@ -21,18 +21,17 @@ import { apiFetch, apiPost, apiPut, apiDelete } from "./api";
 export const commentKeys = {
   all: ["comments"] as const,
   list: (projectId: string) => [...commentKeys.all, "list", projectId] as const,
-};
+} as const;
 
 // ---------------------------------------------------------------------------
 // Query options
 // ---------------------------------------------------------------------------
 
 export function commentsQueryOptions(projectId: string) {
-  return queryOptions({
-    queryKey: commentKeys.list(projectId),
-    queryFn: () =>
-      apiFetch(`/api/projects/${projectId}/comments`, CommentsResponse),
-  });
+  const queryKey = commentKeys.list(projectId);
+  const queryFn = () =>
+    apiFetch(`/api/projects/${projectId}/comments`, CommentsResponse);
+  return queryOptions({ queryKey, queryFn });
 }
 
 // ---------------------------------------------------------------------------
@@ -40,7 +39,8 @@ export function commentsQueryOptions(projectId: string) {
 // ---------------------------------------------------------------------------
 
 export function useCommentsQuery(projectId: string) {
-  return useQuery(commentsQueryOptions(projectId));
+  const opts = commentsQueryOptions(projectId);
+  return useQuery(opts);
 }
 
 export function useCreateCommentMutation(projectId: string) {
@@ -54,9 +54,8 @@ export function useCreateCommentMutation(projectId: string) {
         input
       ),
     onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: commentKeys.list(projectId),
-      });
+      const queryKey = commentKeys.list(projectId);
+      void queryClient.invalidateQueries({ queryKey });
     },
   });
 }
@@ -67,9 +66,8 @@ export function useUpdateCommentMutation(projectId: string) {
     mutationFn: ({ id, text }: { id: string; text: string }) =>
       apiPut(`/api/comments/${id}`, Comment, UpdateCommentRequest, { text }),
     onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: commentKeys.list(projectId),
-      });
+      const queryKey = commentKeys.list(projectId);
+      void queryClient.invalidateQueries({ queryKey });
     },
   });
 }
@@ -79,9 +77,8 @@ export function useDeleteCommentMutation(projectId: string) {
   return useMutation({
     mutationFn: (id: string) => apiDelete(`/api/comments/${id}`, ApiSuccess),
     onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: commentKeys.list(projectId),
-      });
+      const queryKey = commentKeys.list(projectId);
+      void queryClient.invalidateQueries({ queryKey });
     },
   });
 }

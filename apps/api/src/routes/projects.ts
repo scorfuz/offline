@@ -9,29 +9,29 @@ import {
   Project,
   ProjectsResponse,
   UpdateProjectRequest,
-} from "@base-template/contracts";
+} from "@offline/contracts";
 
 import { projects } from "../platform/db/schema";
 import { type RouteContext, requireAuth, sendJson, readBody } from "./shared";
 
-export async function handleProjectRoutes(ctx: RouteContext): Promise<boolean> {
+export async function routeProjects(ctx: RouteContext): Promise<boolean> {
   const { method, pathname } = ctx;
 
   // GET /api/projects
   if (method === "GET" && pathname === "/api/projects") {
-    return handleListProjects(ctx);
+    return listProjects(ctx);
   }
 
   // POST /api/projects
   if (method === "POST" && pathname === "/api/projects") {
-    return handleCreateProject(ctx);
+    return createProject(ctx);
   }
 
   // PUT /api/projects/:id
   if (method === "PUT") {
     const match = pathname.match(/^\/api\/projects\/([^/]+)$/);
     if (match) {
-      return handleUpdateProject(ctx, match[1]!);
+      return updateProject(ctx, match[1]!);
     }
   }
 
@@ -39,7 +39,7 @@ export async function handleProjectRoutes(ctx: RouteContext): Promise<boolean> {
   if (method === "DELETE") {
     const match = pathname.match(/^\/api\/projects\/([^/]+)$/);
     if (match) {
-      return handleDeleteProject(ctx, match[1]!);
+      return deleteProject(ctx, match[1]!);
     }
   }
 
@@ -60,7 +60,7 @@ function formatProject(row: typeof projects.$inferSelect) {
 }
 
 // GET /api/projects
-async function handleListProjects(ctx: RouteContext): Promise<boolean> {
+async function listProjects(ctx: RouteContext): Promise<boolean> {
   const user = await requireAuth(ctx);
   if (!user) {
     sendJson(ctx.response, 401, ApiError, { error: "Unauthorized" });
@@ -81,12 +81,13 @@ async function handleListProjects(ctx: RouteContext): Promise<boolean> {
       .orderBy(projects.createdAt);
   }
 
-  sendJson(ctx.response, 200, ProjectsResponse, rows.map(formatProject));
+  const formattedRows = rows.map(formatProject);
+  sendJson(ctx.response, 200, ProjectsResponse, formattedRows);
   return true;
 }
 
 // POST /api/projects
-async function handleCreateProject(ctx: RouteContext): Promise<boolean> {
+async function createProject(ctx: RouteContext): Promise<boolean> {
   const user = await requireAuth(ctx);
   if (!user) {
     sendJson(ctx.response, 401, ApiError, { error: "Unauthorized" });
@@ -122,12 +123,13 @@ async function handleCreateProject(ctx: RouteContext): Promise<boolean> {
     })
     .returning();
 
-  sendJson(ctx.response, 201, Project, formatProject(rows[0]!));
+  const created = formatProject(rows[0]!);
+  sendJson(ctx.response, 201, Project, created);
   return true;
 }
 
 // PUT /api/projects/:id
-async function handleUpdateProject(
+async function updateProject(
   ctx: RouteContext,
   projectId: string
 ): Promise<boolean> {
@@ -170,13 +172,17 @@ async function handleUpdateProject(
     }
   }
 
-  const updates: Record<string, unknown> = { updatedAt: new Date() };
-  if (body.title !== undefined) updates.title = body.title.trim();
-  if (body.description !== undefined)
-    updates.description = body.description.trim();
-  if (body.status !== undefined) updates.status = body.status;
-  if (body.assignedTechId !== undefined)
-    updates.assignedTechId = body.assignedTechId;
+  const updates: Record<string, unknown> = {
+    updatedAt: new Date(),
+    ...(body.title !== undefined && { title: body.title.trim() }),
+    ...(body.description !== undefined && {
+      description: body.description.trim(),
+    }),
+    ...(body.status !== undefined && { status: body.status }),
+    ...(body.assignedTechId !== undefined && {
+      assignedTechId: body.assignedTechId,
+    }),
+  };
 
   const rows = await ctx.database.db
     .update(projects)
@@ -184,12 +190,13 @@ async function handleUpdateProject(
     .where(eq(projects.id, projectId))
     .returning();
 
-  sendJson(ctx.response, 200, Project, formatProject(rows[0]!));
+  const updated = formatProject(rows[0]!);
+  sendJson(ctx.response, 200, Project, updated);
   return true;
 }
 
 // DELETE /api/projects/:id
-async function handleDeleteProject(
+async function deleteProject(
   ctx: RouteContext,
   projectId: string
 ): Promise<boolean> {

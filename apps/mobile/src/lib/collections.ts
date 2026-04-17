@@ -4,7 +4,7 @@
 import { createCollection } from "@tanstack/react-db";
 import { powerSyncCollectionOptions } from "@tanstack/powersync-db-collection";
 import type { PowerSyncDatabase } from "@powersync/react-native";
-import { appSchema, type Project, type Comment } from "./powersync-schema";
+import { appSchema } from "./powersync-schema";
 import { z } from "zod";
 
 // Schema validation for mutations

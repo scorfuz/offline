@@ -1,4 +1,4 @@
-import type { CurrentUserResponseType } from "@base-template/contracts";
+import type { CurrentUserResponseType } from "@offline/contracts";
 
 import type { DatabaseClient } from "../platform/db";
 import { getUserRoleById } from "./roles";
@@ -15,6 +15,12 @@ type SessionResult = {
   };
 } | null;
 
+const unauthenticated = {
+  authenticated: false,
+  session: null,
+  user: null,
+} as const;
+
 export async function getCurrentUserResponse(options: {
   database: DatabaseClient;
   session: SessionResult;
@@ -22,11 +28,7 @@ export async function getCurrentUserResponse(options: {
   const { database, session } = options;
 
   if (session === null) {
-    return {
-      authenticated: false,
-      session: null,
-      user: null,
-    };
+    return unauthenticated;
   }
 
   const role = await getUserRoleById({
@@ -35,6 +37,7 @@ export async function getCurrentUserResponse(options: {
   });
 
   return {
+    ...unauthenticated,
     authenticated: true,
     session: {
       id: session.session.id,

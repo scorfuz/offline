@@ -1,0 +1,24 @@
+{
+  "name": "@offline/mobile-e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --import tsx --test --test-concurrency=1 src/**/*.test.ts",
+    "test:smoke": "node --import tsx --test src/smoke.test.ts",
+    "test:projects-flow": "node --import tsx --test src/projects-flow.test.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "appium": "appium",
+    "appium:driver:install:android": "appium driver install uiautomator2 || appium driver update uiautomator2",
+    "appium:driver:install:ios": "appium driver install --source=npm appium-xcuitest-driver@9 || appium driver update xcuitest"
+  },
+  "devDependencies": {
+    "appium": "^2.19.0",
+    "appium-uiautomator2-driver": "^4.2.9",
+    "appium-xcuitest-driver": "^9.10.5",
+    "dotenv": "^17.2.3",
+    "tsx": "^4.21.0",
+    "webdriverio": "^9.20.0"
+  }
+}

@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 
-import type { UserRoleType } from "@base-template/contracts";
+import type { UserRoleType } from "@offline/contracts";
 import type { DatabaseClient } from "../platform/db";
 import { authUsers } from "../platform/db/schema";
 
@@ -14,10 +14,11 @@ export async function getUserRoleById(
 ): Promise<UserRoleType | null> {
   const { database, userId } = options;
 
+  const userIdCondition = eq(authUsers.id, userId);
   const [record] = await database.db
     .select({ role: authUsers.role })
     .from(authUsers)
-    .where(eq(authUsers.id, userId));
+    .where(userIdCondition);
 
   if (!record || record.role === null || record.role === undefined) {
     return null;

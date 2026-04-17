@@ -5,7 +5,7 @@ import {
   CurrentUserResponse,
   type CurrentUserResponseType,
   LoginRequest,
-} from "@base-template/contracts";
+} from "@offline/contracts";
 
 export interface AuthClientOptions {
   baseUrl: string;
@@ -72,9 +72,10 @@ export function createAuthClient(options: AuthClientOptions): AuthClient {
         throw new Error(`Failed to get current user: ${response.status}`);
       }
 
+      const meJson = await response.json();
       const apiResponse: CurrentUserResponseType = decodeWithSchema(
         CurrentUserResponse,
-        await response.json(),
+        meJson,
         "Invalid auth session response"
       );
       return transformApiResponse(apiResponse);
@@ -113,9 +114,10 @@ export function createAuthClient(options: AuthClientOptions): AuthClient {
         throw new Error("Login succeeded but failed to get session");
       }
 
+      const sessionJson = await meResponse.json();
       const apiResponse: CurrentUserResponseType = decodeWithSchema(
         CurrentUserResponse,
-        await meResponse.json(),
+        sessionJson,
         "Invalid auth session response"
       );
       return transformApiResponse(apiResponse);

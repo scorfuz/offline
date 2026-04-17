@@ -47,9 +47,10 @@ export async function startServer(
 async function run() {
   try {
     const { port } = await startServer();
-    console.log(`base-template api listening on port ${port}`);
+    console.log(`offline api listening on port ${port}`);
   } catch (error) {
-    console.error(formatStartupError(error));
+    const errorMessage = formatStartupError(error);
+    console.error(errorMessage);
     process.exitCode = 1;
   }
 }

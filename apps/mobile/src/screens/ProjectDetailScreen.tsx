@@ -20,7 +20,7 @@ import {
 } from "react-native";
 import { useLiveQuery } from "@tanstack/react-db";
 import { eq } from "@tanstack/react-db";
-import { theme } from "@base-template/ui";
+import { theme } from "@offline/ui";
 import { useProjects } from "../lib/projects-provider";
 import {
   getStatusLabel,
@@ -155,7 +155,12 @@ export function ProjectDetailScreen({
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={onBack}
+          style={styles.backButton}
+          testID="project-detail-back"
+          accessibilityLabel="project-detail-back"
+        >
           <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
       </View>
@@ -163,7 +168,11 @@ export function ProjectDetailScreen({
       {/* Project Info */}
       <View style={styles.content}>
         <View style={styles.titleSection}>
-          <Text style={styles.title}>
+          <Text
+            style={styles.title}
+            testID="project-detail-title"
+            accessibilityLabel="project-detail-title"
+          >
             {project.title ?? "Untitled Project"}
           </Text>
           <View
@@ -204,6 +213,8 @@ export function ProjectDetailScreen({
                   ]}
                   onPress={() => handleStatusChange(status)}
                   disabled={updating}
+                  testID={`project-status-${status}`}
+                  accessibilityLabel={`project-status-${status}`}
                 >
                   {updating ? (
                     <ActivityIndicator
@@ -230,6 +241,8 @@ export function ProjectDetailScreen({
         <TouchableOpacity
           style={styles.commentsCard}
           onPress={() => onViewComments(project.id)}
+          testID="project-detail-comments"
+          accessibilityLabel="project-detail-comments"
         >
           <View style={styles.commentsHeader}>
             <Text style={styles.commentsTitle}>Comments</Text>

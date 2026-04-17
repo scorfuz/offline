@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import type { ProjectType, ProjectStatusType } from "@base-template/contracts";
+import type { ProjectType, ProjectStatusType } from "@offline/contracts";
 
 import { Button } from "./ui/button";
 import {

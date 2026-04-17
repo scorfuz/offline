@@ -8,13 +8,14 @@ import { PowerSyncConnector } from "./powersync-connector";
 export interface CreatePowerSyncDatabaseOptions {
   apiOrigin: string;
   powerSyncEndpoint: string;
+  dbFilename?: string;
 }
 
 export function createPowerSyncDatabase(
   options: CreatePowerSyncDatabaseOptions
 ) {
   const db = new PowerSyncDatabase({
-    database: { dbFilename: "base-template.sqlite" },
+    database: { dbFilename: options.dbFilename ?? "offline.sqlite" },
     schema: appSchema,
   });
 

@@ -1,5 +1,5 @@
 {
-  "name": "@base-template/api-client",
+  "name": "@offline/api-client",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -13,7 +13,7 @@
     "test": "tsx --test"
   },
   "dependencies": {
-    "@base-template/contracts": "workspace:*",
+    "@offline/contracts": "workspace:*",
     "effect": "^3.21.0"
   },
   "devDependencies": {

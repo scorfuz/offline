@@ -1,17 +1,20 @@
 {
   "expo": {
-    "name": "base-template",
-    "slug": "base-template",
-    "scheme": "base-template",
+    "name": "offline",
+    "slug": "offline",
+    "scheme": "offline",
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router",
+      ["expo-dev-client", { "showFloatingButton": false }]
+    ],
     "experiments": {
       "typedRoutes": true
     },
     "ios": {
-      "bundleIdentifier": "com.anonymous.base-template"
+      "bundleIdentifier": "ca.sumisura.offline.dev"
     }
   }
 }

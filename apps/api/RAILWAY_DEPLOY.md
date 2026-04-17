@@ -1,4 +1,4 @@
-# Railway Deployment Guide for base-template API
+# Railway Deployment Guide for offline API
 
 ## Prerequisites
 
@@ -47,8 +47,8 @@ If Railway asks for commands manually, use one of these setups:
 
 #### If Railway service root is repo root
 
-- **Build command:** `pnpm --filter @base-template/api build`
-- **Start command:** `pnpm --filter @base-template/api start`
+- **Build command:** `pnpm --filter @offline/api build`
+- **Start command:** `pnpm --filter @offline/api start`
 
 ### 1.3 Verify Build Output
 
@@ -102,7 +102,7 @@ railway login
 railway init
 # Choose:
 # - Create a new project
-# - Name it: base-template-api
+# - Name it: offline-api
 ```
 
 ### 4.3 Add Postgres Database
@@ -142,7 +142,7 @@ Railway will:
 
 ```bash
 railway domain
-# Outputs: https://base-template-api-production.up.railway.app
+# Outputs: https://offline-api-production.up.railway.app
 ```
 
 ## Step 5: Configure Cloudflare DNS
@@ -161,7 +161,7 @@ railway domain add api.yourdomain.com
 4. Add a CNAME record:
    - **Type:** CNAME
    - **Name:** `api` (or `api.yourdomain.com`)
-   - **Target:** `base-template-api-production.up.railway.app`
+   - **Target:** `offline-api-production.up.railway.app`
    - **Proxy status:** 🟡 DNS only (grey cloud) - **IMPORTANT!**
 
    > ⚠️ **Don't enable the orange cloud proxy yet!** Railway needs to verify the domain first.
@@ -197,7 +197,7 @@ https://api.yourdomain.com/api/powersync/token
 Or if using Railway's temporary URL:
 
 ```
-https://base-template-api-production.up.railway.app/api/powersync/token
+https://offline-api-production.up.railway.app/api/powersync/token
 ```
 
 ## Step 7: Verify Deployment
@@ -225,7 +225,7 @@ Check the build logs in Railway dashboard. Common issues:
 ### "Service unhealthy"
 
 - Verify health check endpoint exists at `/health`
-- Verify Railway is using `pnpm start` or `pnpm --filter @base-template/api start`
+- Verify Railway is using `pnpm start` or `pnpm --filter @offline/api start`
 - Check logs: `railway logs`
 
 ### "Database connection failed"

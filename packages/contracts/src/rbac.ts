@@ -24,21 +24,25 @@ export const Resource = Schema.Literal("users");
 
 export type Resource = typeof Resource.Type;
 
+const optionalResourceId = Schema.optional(Schema.String);
+
 // Permission check request
 export const CheckPermissionRequest = Schema.Struct({
   userId: Schema.String,
   role: UserRole,
   permission: Permission,
   resource: Resource,
-  resourceId: Schema.optional(Schema.String),
+  resourceId: optionalResourceId,
 });
 
 export type CheckPermissionRequest = typeof CheckPermissionRequest.Type;
 
+const optionalReason = Schema.optional(Schema.String);
+
 // Permission check response
 export const CheckPermissionResponse = Schema.Struct({
   allowed: Schema.Boolean,
-  reason: Schema.optional(Schema.String),
+  reason: optionalReason,
 });
 
 export type CheckPermissionResponse = typeof CheckPermissionResponse.Type;
@@ -56,17 +60,19 @@ export const UserWithRole = Schema.Struct({
 
 export type UserWithRole = typeof UserWithRole.Type;
 
+const permissionsArray = Schema.Array(Permission);
+
 // Role permissions mapping entry
 export const RolePermissionEntry = Schema.Struct({
   role: UserRole,
   resource: Resource,
-  permissions: Schema.Array(Permission),
+  permissions: permissionsArray,
 });
 
 export type RolePermissionEntry = typeof RolePermissionEntry.Type;
 
 // Default role permissions mapping
-export const RolePermissions: RolePermissionEntry[] = [
+export const RolePermissions: readonly RolePermissionEntry[] = [
   // Admin: full access to everything
   {
     role: "admin",
@@ -90,5 +96,6 @@ export function hasPermission(
   const entry = RolePermissions.find(
     (rp) => rp.role === role && rp.resource === resource
   );
-  return entry?.permissions.includes(permission) ?? false;
+  const found = entry?.permissions.includes(permission) ?? false;
+  return found;
 }

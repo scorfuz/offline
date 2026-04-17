@@ -1,4 +1,4 @@
-import type { UserRoleType } from "@base-template/contracts";
+import type { UserRoleType } from "@offline/contracts";
 
 type AuthorizeInput = {
   currentRole: UserRoleType | null;

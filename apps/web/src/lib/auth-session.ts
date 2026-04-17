@@ -1,4 +1,4 @@
-import type { AuthSession, UserRoleType } from "@base-template/contracts";
+import type { AuthSession, UserRoleType } from "@offline/contracts";
 import { createServerFn } from "@tanstack/react-start";
 
 import { getBrowserAuthSession } from "./auth-client";
@@ -33,7 +33,8 @@ const getServerAuthSession = createServerFn({ method: "GET" }).handler(
     const { getRequestHeader } = await import("@tanstack/react-start/server");
 
     const apiOrigin = process.env.VITE_API_ORIGIN ?? "http://localhost:3001";
-    const response = await fetch(new URL("/api/auth/me", apiOrigin), {
+    const authMeUrl = new URL("/api/auth/me", apiOrigin);
+    const response = await fetch(authMeUrl, {
       headers: {
         Accept: "application/json",
         cookie: getRequestHeader("cookie") ?? "",

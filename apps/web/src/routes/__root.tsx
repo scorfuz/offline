@@ -6,7 +6,7 @@ import {
   createRootRouteWithContext,
 } from "@tanstack/react-router";
 import type { QueryClient } from "@tanstack/react-query";
-import { theme } from "@base-template/ui";
+import { theme } from "@offline/ui";
 
 import "../styles.css";
 import { NotFoundPage } from "../components/not-found-page";

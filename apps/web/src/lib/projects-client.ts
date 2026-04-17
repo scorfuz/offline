@@ -2,12 +2,11 @@ import {
   ApiSuccess,
   CreateProjectRequest,
   Project,
-  type ProjectType,
   ProjectsResponse,
   UpdateProjectRequest,
   type UserSummaryType,
   UsersResponse,
-} from "@base-template/contracts";
+} from "@offline/contracts";
 import {
   queryOptions,
   useMutation,
@@ -43,27 +42,30 @@ export type TechUser = UserSummaryType & { role: "tech" };
 // ---------------------------------------------------------------------------
 
 export function projectsQueryOptions() {
-  return queryOptions({
-    queryKey: projectKeys.list(),
-    queryFn: () => apiFetch("/api/projects", ProjectsResponse),
-  });
+  const queryKey = projectKeys.list();
+  const queryFn = () => apiFetch("/api/projects", ProjectsResponse);
+  return queryOptions({ queryKey, queryFn });
 }
 
 export function allUsersQueryOptions() {
+  const queryKey = projectKeys.users();
+  const queryFn = () => apiFetch("/api/users", UsersResponse);
   return queryOptions({
-    queryKey: projectKeys.users(),
-    queryFn: () => apiFetch("/api/users", UsersResponse),
+    queryKey,
+    queryFn,
     staleTime: 5 * 60 * 1000, // 5 minutes — user list rarely changes
   });
 }
 
 export function techUsersQueryOptions() {
+  const queryKey = projectKeys.techs();
+  const queryFn = async () => {
+    const users = await apiFetch("/api/users?role=tech", UsersResponse);
+    return users.filter((user): user is TechUser => user.role === "tech");
+  };
   return queryOptions({
-    queryKey: projectKeys.techs(),
-    queryFn: async () => {
-      const users = await apiFetch("/api/users?role=tech", UsersResponse);
-      return users.filter((user): user is TechUser => user.role === "tech");
-    },
+    queryKey,
+    queryFn,
     staleTime: 5 * 60 * 1000, // 5 minutes — user list rarely changes
   });
 }
@@ -73,22 +75,26 @@ export function techUsersQueryOptions() {
 // ---------------------------------------------------------------------------
 
 export function useProjectsQuery() {
-  return useQuery(projectsQueryOptions());
+  const opts = projectsQueryOptions();
+  return useQuery(opts);
 }
 
 export function useProjectQuery(projectId: string) {
+  const baseOpts = projectsQueryOptions();
   return useQuery({
-    ...projectsQueryOptions(),
+    ...baseOpts,
     select: (projects) => projects.find((p) => p.id === projectId) ?? null,
   });
 }
 
 export function useAllUsersQuery() {
-  return useQuery(allUsersQueryOptions());
+  const opts = allUsersQueryOptions();
+  return useQuery(opts);
 }
 
 export function useTechUsersQuery() {
-  return useQuery(techUsersQueryOptions());
+  const opts = techUsersQueryOptions();
+  return useQuery(opts);
 }
 
 export function useCreateProjectMutation() {

@@ -6,7 +6,8 @@ import { defineConfig, loadEnv } from "vite";
 
 export default defineConfig(({ mode }) => {
   // Load env from apps/web/.env explicitly
-  loadEnv(mode, process.cwd(), "");
+  const cwd = process.cwd();
+  loadEnv(mode, cwd, "");
 
   return {
     resolve: {

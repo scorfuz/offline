@@ -23,7 +23,7 @@ import {
   Platform,
 } from "react-native";
 import { useLiveQuery, eq } from "@tanstack/react-db";
-import { theme } from "@base-template/ui";
+import { theme } from "@offline/ui";
 import { useProjects } from "../lib/projects-provider";
 import type { Comment } from "../lib/powersync-schema";
 
@@ -33,8 +33,13 @@ interface CommentsScreenProps {
   onBack: () => void;
 }
 
+function createCommentId() {
+  return `comment-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 interface CommentItemProps {
   comment: Comment;
+  currentUserId: string;
   isOwn: boolean;
   onEdit: (id: string, text: string) => void;
   onDelete: (id: string) => void;
@@ -43,6 +48,7 @@ interface CommentItemProps {
 
 function CommentItem({
   comment,
+  currentUserId,
   isOwn,
   onEdit,
   onDelete,
@@ -86,7 +92,7 @@ function CommentItem({
     <View style={[styles.commentCard, isPending && styles.pendingCard]}>
       <View style={styles.commentHeader}>
         <Text style={styles.commentAuthor}>
-          {comment.author_id === comment.author_id ? "You" : "Admin"}
+          {comment.author_id === currentUserId ? "You" : "Teammate"}
         </Text>
         <View style={styles.commentMeta}>
           {isPending && (
@@ -105,7 +111,6 @@ function CommentItem({
             value={editText}
             onChangeText={setEditText}
             multiline
-            autoFocus
           />
           <View style={styles.editActions}>
             <TouchableOpacity
@@ -178,7 +183,7 @@ export function CommentsScreen({
     setIsSubmitting(true);
     try {
       await commentsCollection.insert({
-        id: crypto.randomUUID(),
+        id: createCommentId(),
         project_id: projectId,
         author_id: currentUserId,
         text: newCommentText.trim(),
@@ -260,20 +265,32 @@ export function CommentsScreen({
     >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack}>
+        <TouchableOpacity
+          onPress={onBack}
+          testID="comments-back"
+          accessibilityLabel="comments-back"
+        >
           <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Comments</Text>
+        <Text
+          style={styles.headerTitle}
+          testID="comments-header-title"
+          accessibilityLabel="comments-header-title"
+        >
+          Comments
+        </Text>
         <View style={styles.placeholder} />
       </View>
 
       {/* Comments List */}
       <FlatList
         data={comments}
+        testID="comments-list"
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <CommentItem
             comment={item}
+            currentUserId={currentUserId}
             isOwn={item.author_id === currentUserId}
             onEdit={handleEditComment}
             onDelete={handleDeleteComment}
@@ -284,7 +301,13 @@ export function CommentsScreen({
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyTitle}>No Comments Yet</Text>
+            <Text
+              style={styles.emptyTitle}
+              testID="comments-empty-title"
+              accessibilityLabel="comments-empty-title"
+            >
+              No Comments Yet
+            </Text>
             <Text style={styles.emptySubtext}>
               Be the first to add a comment to this project.
             </Text>
@@ -296,6 +319,8 @@ export function CommentsScreen({
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
+          testID="comments-input"
+          accessibilityLabel="comments-input"
           value={newCommentText}
           onChangeText={setNewCommentText}
           placeholder="Add a comment..."
@@ -311,6 +336,8 @@ export function CommentsScreen({
           ]}
           onPress={handleAddComment}
           disabled={!newCommentText.trim() || isSubmitting}
+          testID="comments-send"
+          accessibilityLabel="comments-send"
         >
           {isSubmitting ? (
             <ActivityIndicator size="small" color={theme.color.surface} />

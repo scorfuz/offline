@@ -3,23 +3,23 @@ import {
   type ServerResponse,
 } from "node:http";
 
-import { ApiError } from "@base-template/contracts";
+import { ApiError } from "@offline/contracts";
 
-import { createAuth, handleAuthRoutes } from "./auth";
+import { createAuth, routeAuth } from "./auth";
 import { createDatabaseClient } from "./platform/db";
 import { loadEnv, type AppEnv } from "./platform/env";
 import { getHealthResponse } from "./routes/health";
-import { handleProjectRoutes } from "./routes/projects";
-import { handleCommentRoutes } from "./routes/comments";
-import { handleUserRoutes } from "./routes/users";
-import { handlePowersyncRoutes } from "./routes/powersync";
+import { routeProjects } from "./routes/projects";
+import { routeComments } from "./routes/comments";
+import { routeUsers } from "./routes/users";
+import { routePowersync } from "./routes/powersync";
 import { RouteError, sendJson } from "./routes/shared";
 
 export interface CreateServerOptions {
   env?: AppEnv;
 }
 
-function setCorsHeaders(response: ServerResponse, webOrigin: string): void {
+function applyCorsHeaders(response: ServerResponse, webOrigin: string): void {
   response.setHeader("Access-Control-Allow-Origin", webOrigin);
   response.setHeader(
     "Access-Control-Allow-Methods",
@@ -42,7 +42,7 @@ export function createServer(options: CreateServerOptions = {}) {
       const url = new URL(request.url ?? "/", "http://localhost");
 
       // Handle CORS preflight
-      setCorsHeaders(response, env.webOrigin);
+      applyCorsHeaders(response, env.webOrigin);
 
       if (request.method === "OPTIONS") {
         response.writeHead(204);
@@ -67,35 +67,20 @@ export function createServer(options: CreateServerOptions = {}) {
         response,
       };
 
-      const handledAuthRoute = await handleAuthRoutes(routeCtx);
+      const routedAuth = await routeAuth(routeCtx);
+      if (routedAuth) return;
 
-      if (handledAuthRoute) {
-        return;
-      }
+      const routedPowersync = await routePowersync(routeCtx);
+      if (routedPowersync) return;
 
-      const handledPowersyncRoute = await handlePowersyncRoutes(routeCtx);
+      const routedProject = await routeProjects(routeCtx);
+      if (routedProject) return;
 
-      if (handledPowersyncRoute) {
-        return;
-      }
+      const routedComment = await routeComments(routeCtx);
+      if (routedComment) return;
 
-      const handledProjectRoute = await handleProjectRoutes(routeCtx);
-
-      if (handledProjectRoute) {
-        return;
-      }
-
-      const handledCommentRoute = await handleCommentRoutes(routeCtx);
-
-      if (handledCommentRoute) {
-        return;
-      }
-
-      const handledUserRoute = await handleUserRoutes(routeCtx);
-
-      if (handledUserRoute) {
-        return;
-      }
+      const routedUser = await routeUsers(routeCtx);
+      if (routedUser) return;
 
       sendJson(response, 404, ApiError, { error: "Not Found" });
     } catch (error) {

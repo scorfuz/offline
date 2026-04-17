@@ -41,9 +41,10 @@ export async function apiFetch<A, I>(
     throw new Error(text || `API error: ${response.status}`);
   }
 
+  const responseJson = await response.json();
   return decodeWithSchema(
     schema,
-    await response.json(),
+    responseJson,
     `Invalid API response for ${path}`
   );
 }
@@ -54,12 +55,16 @@ export function apiPost<A, I, BodyA, BodyI>(
   bodySchema: Schema.Schema<BodyA, BodyI, never>,
   body: unknown
 ): Promise<A> {
+  const decoded = decodeWithSchema(
+    bodySchema,
+    body,
+    `Invalid API request for ${path}`
+  );
+  const serialized = JSON.stringify(decoded);
   return apiFetch(path, responseSchema, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(
-      decodeWithSchema(bodySchema, body, `Invalid API request for ${path}`)
-    ),
+    body: serialized,
   });
 }
 
@@ -69,12 +74,16 @@ export function apiPut<A, I, BodyA, BodyI>(
   bodySchema: Schema.Schema<BodyA, BodyI, never>,
   body: unknown
 ): Promise<A> {
+  const decoded = decodeWithSchema(
+    bodySchema,
+    body,
+    `Invalid API request for ${path}`
+  );
+  const serialized = JSON.stringify(decoded);
   return apiFetch(path, responseSchema, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(
-      decodeWithSchema(bodySchema, body, `Invalid API request for ${path}`)
-    ),
+    body: serialized,
   });
 }
 

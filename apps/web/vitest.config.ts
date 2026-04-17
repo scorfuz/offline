@@ -1,13 +1,13 @@
-/// <reference types="vitest/config" />
-
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
+
+const reactPlugin = react();
 
 export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
-  plugins: [react()],
+  plugins: [reactPlugin],
   test: {
     environment: "jsdom",
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],

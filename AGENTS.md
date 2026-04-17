@@ -1,10 +1,10 @@
 # AGENTS.md
 
-Project notes for future agents working in `base-template`.
+Project notes for future agents working in `offline`.
 
 ## Project
 
-- Name: `base-template`
+- Name: `offline`
 - Repo type: `pnpm` workspace monorepo with `Turborepo`
 - Product: Full-stack template with web, API, and mobile apps
 
@@ -14,14 +14,14 @@ Project notes for future agents working in `base-template`.
 
 - **Tailwind CSS v4**: Latest version with CSS-based configuration
 - **shadcn/ui**: Headless UI components with Tailwind styling
-- **CSS Variables**: Theme tokens defined in `@base-template/ui`
+- **CSS Variables**: Theme tokens defined in `@offline/ui`
 
 ## Hosting & Deployment
 
 ### URLs
 
 - **Web**: https://offline.sumisura.ca (Vercel)
-- **API**: https://base-templateapi-production.up.railway.app (Railway)
+- **API**: https://api.sumisura.ca (Railway)
 - **PowerSync**: https://powersync-production-f614.up.railway.app (self-hosted on Railway via `journeyapps/powersync-service` container)
 - **Database**: PostgreSQL on Railway (shared by API and PowerSync)
 
@@ -64,10 +64,10 @@ These were verified successfully in this repo:
 - `pnpm install`
 - `pnpm typecheck`
 - `pnpm build`
-- `pnpm --filter @base-template/web dev`
-- `pnpm --filter @base-template/api dev`
-- `pnpm --filter @base-template/mobile dev`
-- `pnpm --filter @base-template/mobile build`
+- `pnpm --filter @offline/web dev`
+- `pnpm --filter @offline/api dev`
+- `pnpm --filter @offline/mobile dev`
+- `pnpm --filter @offline/mobile build`
 
 ## Environment Setup
 
@@ -98,22 +98,22 @@ cp .env apps/mobile/.env
 ## Current Commands By Package
 
 - Root: `pnpm dev`, `pnpm build`, `pnpm typecheck`, `pnpm lint`, `pnpm test`
-- Web: `pnpm --filter @base-template/web dev`
-- API: `pnpm --filter @base-template/api dev`
-- Mobile: `pnpm --filter @base-template/mobile dev`
+- Web: `pnpm --filter @offline/web dev`
+- API: `pnpm --filter @offline/api dev`
+- Mobile: `pnpm --filter @offline/mobile dev`
 
 ## Setup Assumptions
 
 - Use the repo-pinned package manager from `package.json`: `pnpm@10.6.3`.
 - Assume a local Node.js version compatible with current workspace dependencies; do not change runtime/tooling versions unless explicitly requested.
 - Prefer `pnpm --filter <package>` for package-scoped work instead of ad hoc scripts.
-- Expo native commands may require local platform tooling; prefer `pnpm --filter @base-template/mobile build` and `pnpm --filter @base-template/mobile dev` unless native run commands are specifically needed.
+- Expo native commands may require local platform tooling; prefer `pnpm --filter @offline/mobile build` and `pnpm --filter @offline/mobile dev` unless native run commands are specifically needed.
 
 ## Verification Matrix
 
-- For `apps/web` changes only: run `pnpm --filter @base-template/web typecheck` and `pnpm --filter @base-template/web build`.
-- For `apps/api` changes only: run `pnpm --filter @base-template/api typecheck` and `pnpm --filter @base-template/api build`.
-- For `apps/mobile` changes only: run `pnpm --filter @base-template/mobile typecheck` and `pnpm --filter @base-template/mobile build`.
+- For `apps/web` changes only: run `pnpm --filter @offline/web typecheck` and `pnpm --filter @offline/web build`.
+- For `apps/api` changes only: run `pnpm --filter @offline/api typecheck` and `pnpm --filter @offline/api build`.
+- For `apps/mobile` changes only: run `pnpm --filter @offline/mobile typecheck` and `pnpm --filter @offline/mobile build`.
 - For shared package changes in `packages/*`: run `pnpm typecheck` and `pnpm build`.
 - For cross-app contract/client changes: run `pnpm typecheck` and `pnpm build`.
 - Run narrower verification first while iterating; run root verification before claiming broad workspace changes are complete.
@@ -152,7 +152,7 @@ cp .env apps/mobile/.env
 
 - Start from `package.json` scripts and nearby source files before introducing new commands or tools.
 - Find 2-3 similar implementations in the same app/package and match their conventions.
-- Prefer workspace package imports (`@base-template/*`) and existing TS path aliases over relative cross-package imports.
+- Prefer workspace package imports (`@offline/*`) and existing TS path aliases over relative cross-package imports.
 - Avoid introducing new tooling, config files, or architectural layers unless the task clearly requires them.
 
 ## Common Pitfalls

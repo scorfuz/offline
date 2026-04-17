@@ -7,7 +7,7 @@
 ## Prerequisites
 
 - PowerSync Cloud account (https://app.powersync.com)
-- Postgres database running with the base-template schema (projects, comments, auth_users tables)
+- Postgres database running with the offline schema (projects, comments, auth_users tables)
 - API deployed with the `/api/powersync/token` endpoint (Issue #4)
 - **Minimum SDK versions for Sync Streams** (see below)
 

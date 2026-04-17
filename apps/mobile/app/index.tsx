@@ -1,84 +1,73 @@
-/**
- * Home Screen - Projects List for Field Techs
- *
- * Entry point showing projects assigned to the authenticated tech.
- * Handles navigation to project detail and comments.
- */
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { theme } from "@offline/ui";
+import { useAuth } from "../src/lib/auth";
+import { ProjectsProvider } from "../src/lib/powersync";
+import { AuthenticatedHomeScreen, LoginScreen } from "../src/screens";
 
-import { useState } from "react";
-import { StatusBar } from "expo-status-bar";
-import { SafeAreaView, StyleSheet } from "react-native";
-import { theme } from "@base-template/ui";
-import {
-  ProjectsListScreen,
-  ProjectDetailScreen,
-  CommentsScreen,
-} from "../src/screens";
-import { useProjects } from "../src/lib/powersync";
+const API_ORIGIN =
+  process.env.EXPO_PUBLIC_API_ORIGIN ?? "http://localhost:3001";
+const POWERSYNC_ENDPOINT =
+  process.env.EXPO_PUBLIC_POWERSYNC_ENDPOINT ?? "http://localhost:8080";
 
-type Screen = "list" | "detail" | "comments";
+function LoadingScreen() {
+  return (
+    <View style={styles.centerContainer}>
+      <ActivityIndicator size="large" color={theme.color.accent} />
+      <Text style={styles.loadingText}>Checking session...</Text>
+    </View>
+  );
+}
 
 export default function HomeScreen() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>("list");
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
-    null
-  );
-  const { db, isConnected } = useProjects();
+  const { session, isLoading, isSubmitting, error, login, logout, clearError } =
+    useAuth();
 
-  // For now, use a placeholder user ID
-  // In a real app, this would come from authentication context
-  const currentUserId = "tech-123";
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
 
-  const handleProjectPress = (projectId: string) => {
-    setSelectedProjectId(projectId);
-    setCurrentScreen("detail");
-  };
+  if (session.type === "unauthenticated") {
+    return (
+      <LoginScreen
+        isSubmitting={isSubmitting}
+        errorMessage={error}
+        onSubmit={async (credentials) => {
+          clearError();
+          await login(credentials);
+        }}
+      />
+    );
+  }
 
-  const handleViewComments = (projectId: string) => {
-    setSelectedProjectId(projectId);
-    setCurrentScreen("comments");
-  };
-
-  const handleBack = () => {
-    if (currentScreen === "comments") {
-      setCurrentScreen("detail");
-    } else {
-      setCurrentScreen("list");
-      setSelectedProjectId(null);
-    }
-  };
+  const dbFilename = `offline-${session.user.id.replace(/[^a-zA-Z0-9_-]/g, "_")}.sqlite`;
 
   return (
-    <SafeAreaView style={styles.screen}>
-      <StatusBar style="dark" />
-      {currentScreen === "list" && (
-        <ProjectsListScreen
-          currentUserId={currentUserId}
-          onProjectPress={handleProjectPress}
-        />
-      )}
-      {currentScreen === "detail" && selectedProjectId && (
-        <ProjectDetailScreen
-          projectId={selectedProjectId}
-          currentUserId={currentUserId}
-          onBack={handleBack}
-          onViewComments={handleViewComments}
-        />
-      )}
-      {currentScreen === "comments" && selectedProjectId && (
-        <CommentsScreen
-          projectId={selectedProjectId}
-          currentUserId={currentUserId}
-          onBack={handleBack}
-        />
-      )}
-    </SafeAreaView>
+    <ProjectsProvider
+      key={session.user.id}
+      apiOrigin={API_ORIGIN}
+      powerSyncEndpoint={POWERSYNC_ENDPOINT}
+      dbFilename={dbFilename}
+    >
+      <AuthenticatedHomeScreen
+        currentUserId={session.user.id}
+        currentUserEmail={session.user.email}
+        onLogoutPress={logout}
+      />
+    </ProjectsProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  centerContainer: {
     flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: theme.color.canvas,
+    padding: 24,
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: theme.color.muted,
   },
 });

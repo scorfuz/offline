@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 
-import { ApiError, RoleQuery, UsersResponse } from "@base-template/contracts";
+import { ApiError, RoleQuery, UsersResponse } from "@offline/contracts";
 
 import { authUsers } from "../platform/db/schema";
 import {
@@ -10,18 +10,18 @@ import {
   sendJson,
 } from "./shared";
 
-export async function handleUserRoutes(ctx: RouteContext): Promise<boolean> {
+export async function routeUsers(ctx: RouteContext): Promise<boolean> {
   const { method, pathname } = ctx;
 
   // GET /api/users
   if (method === "GET" && pathname === "/api/users") {
-    return handleListUsers(ctx);
+    return listUsers(ctx);
   }
 
   return false;
 }
 
-async function handleListUsers(ctx: RouteContext): Promise<boolean> {
+async function listUsers(ctx: RouteContext): Promise<boolean> {
   const user = await requireAuth(ctx);
   if (!user) {
     sendJson(ctx.response, 401, ApiError, { error: "Unauthorized" });
@@ -56,16 +56,12 @@ async function handleListUsers(ctx: RouteContext): Promise<boolean> {
 
   const rows = await query;
 
-  sendJson(
-    ctx.response,
-    200,
-    UsersResponse,
-    rows.map((r) => ({
-      id: r.id,
-      email: r.email,
-      displayName: r.displayName,
-      role: r.role,
-    }))
-  );
+  const userList = rows.map((r) => ({
+    id: r.id,
+    email: r.email,
+    displayName: r.displayName,
+    role: r.role,
+  }));
+  sendJson(ctx.response, 200, UsersResponse, userList);
   return true;
 }

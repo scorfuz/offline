@@ -1,4 +1,5 @@
 internal import Expo
+import Foundation
 import React
 import ReactAppDependencyProvider
 
@@ -13,6 +14,9 @@ class AppDelegate: ExpoAppDelegate {
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
+    // Force-hide Expo's floating dev tools button on every launch.
+    UserDefaults.standard.set(false, forKey: "EXDevMenuShowFloatingActionButton")
+
     let delegate = ReactNativeDelegate()
     let factory = ExpoReactNativeFactory(delegate: delegate)
     delegate.dependencyProvider = RCTAppDependencyProvider()

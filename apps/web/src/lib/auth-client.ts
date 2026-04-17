@@ -1,8 +1,5 @@
-import type { AuthSession } from "@base-template/contracts";
-import {
-  createAuthClient,
-  type LoginCredentials,
-} from "@base-template/api-client";
+import type { AuthSession } from "@offline/contracts";
+import { createAuthClient, type LoginCredentials } from "@offline/api-client";
 import {
   queryOptions,
   useMutation,

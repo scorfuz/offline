@@ -1,4 +1,4 @@
-# Vercel Deployment Guide for base-template Web
+# Vercel Deployment Guide for offline Web
 
 ## Prerequisites
 
@@ -22,7 +22,7 @@ vercel
 # Choose:
 # - Set up "apps/web"
 # - Link to existing project or create new
-# - Name it: base-template-web
+# - Name it: offline-web
 ```
 
 ### 3. Set Environment Variables
@@ -32,7 +32,7 @@ In Vercel dashboard or via CLI:
 ```bash
 vercel env add VITE_API_ORIGIN
 # Enter your Railway API URL:
-# https://base-template-api-production.up.railway.app
+# https://offline-api-production.up.railway.app
 ```
 
 Or set directly:
@@ -56,7 +56,7 @@ vercel --prod
 Example:
 
 ```
-VITE_API_ORIGIN=https://base-template-api-production.up.railway.app
+VITE_API_ORIGIN=https://offline-api-production.up.railway.app
 ```
 
 ## Build Configuration

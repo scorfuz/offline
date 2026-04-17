@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import type { CommentType } from "@base-template/contracts";
+import type { CommentType } from "@offline/contracts";
 
 import {
   useCommentsQuery,

@@ -1,22 +1,43 @@
 /**
- * Root Layout with ProjectsProvider
+ * Root layout with auth provider.
  */
-import { Stack } from "expo-router";
-import { ProjectsProvider } from "../src/lib/powersync";
+import "../src/lib/crypto-polyfill";
 
-// These would typically come from environment variables
+import { requireOptionalNativeModule } from "expo";
+import { Stack } from "expo-router";
+import { useEffect } from "react";
+import { AuthProvider } from "../src/lib/auth";
+
+type DevMenuPreferencesModule = {
+  setPreferencesAsync: (settings: {
+    showFloatingActionButton?: boolean;
+    motionGestureEnabled?: boolean;
+    touchGestureEnabled?: boolean;
+    keyCommandsEnabled?: boolean;
+    showsAtLaunch?: boolean;
+  }) => Promise<void>;
+};
+
+const DevMenuPreferences =
+  requireOptionalNativeModule<DevMenuPreferencesModule>("DevMenuPreferences");
+
 const API_ORIGIN =
-  process.env.EXPO_PUBLIC_API_ORIGIN ?? "http://localhost:3000";
-const POWERSYNC_ENDPOINT =
-  process.env.EXPO_PUBLIC_POWERSYNC_ENDPOINT ?? "http://localhost:8080";
+  process.env.EXPO_PUBLIC_API_ORIGIN ?? "http://localhost:3001";
 
 export default function RootLayout() {
+  useEffect(() => {
+    void DevMenuPreferences?.setPreferencesAsync({
+      showFloatingActionButton: false,
+      motionGestureEnabled: false,
+      touchGestureEnabled: false,
+      keyCommandsEnabled: false,
+      showsAtLaunch: false,
+    });
+  }, []);
+
   return (
-    <ProjectsProvider
-      apiOrigin={API_ORIGIN}
-      powerSyncEndpoint={POWERSYNC_ENDPOINT}
-    >
+    <AuthProvider apiOrigin={API_ORIGIN}>
       <Stack screenOptions={{ headerShown: false }} />
-    </ProjectsProvider>
+    </AuthProvider>
   );
 }

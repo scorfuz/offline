@@ -51,7 +51,7 @@ export function hasPermission(
 export function hasAnyPermission(
   role: UserRole,
   resource: Resource,
-  permissions: Permission[]
+  permissions: readonly Permission[]
 ): boolean {
   return permissions.some((p) => hasPermission(role, resource, p));
 }
@@ -60,7 +60,10 @@ export function hasAnyPermission(
 // Role Checking
 // ============================================================================
 
-export function hasRole(role: UserRole, allowedRoles: UserRole[]): boolean {
+export function hasRole(
+  role: UserRole,
+  allowedRoles: readonly UserRole[]
+): boolean {
   return allowedRoles.includes(role);
 }
 
@@ -120,13 +123,14 @@ export async function enforceRBAC(
 
   const context: RBACContext = { userId, role: role as UserRole, database };
 
+  const denied = { allowed: false as const, context };
+
   // Check required roles
   if (requiredRoles && requiredRoles.length > 0) {
     if (!hasRole(role as UserRole, requiredRoles)) {
       return {
-        allowed: false,
+        ...denied,
         reason: `Forbidden - Required roles: ${requiredRoles.join(", ")}`,
-        context,
       };
     }
   }
@@ -141,9 +145,8 @@ export async function enforceRBAC(
       )
     ) {
       return {
-        allowed: false,
+        ...denied,
         reason: `Forbidden - Required permission: ${requiredPermission.action} on ${requiredPermission.resource}`,
-        context,
       };
     }
   }
@@ -152,11 +155,7 @@ export async function enforceRBAC(
   if (customCheck) {
     const customResult = await customCheck(context);
     if (!customResult) {
-      return {
-        allowed: false,
-        reason: "Forbidden - Custom check failed",
-        context,
-      };
+      return { ...denied, reason: "Forbidden - Custom check failed" };
     }
   }
 
