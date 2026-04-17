@@ -18,7 +18,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useLiveQuery, eq } from "@tanstack/react-db";
-import { theme } from "@base-template/ui";
+import { theme } from "@offline/ui";
 import { useProjects } from "../lib/projects-provider";
 import { SyncStatusIndicator } from "../components/SyncStatusIndicator";
 import {
@@ -32,9 +32,15 @@ interface ProjectListItemProps {
   project: Project;
   comments: Iterable<Comment>;
   onPress: (projectId: string) => void;
+  testID?: string;
 }
 
-function ProjectListItem({ project, comments, onPress }: ProjectListItemProps) {
+function ProjectListItem({
+  project,
+  comments,
+  onPress,
+  testID,
+}: ProjectListItemProps) {
   const commentCount = getCommentCount(comments, project.id);
   const statusLabel = getStatusLabel(project.status);
   const statusColor = getStatusColor(project.status);
@@ -44,6 +50,8 @@ function ProjectListItem({ project, comments, onPress }: ProjectListItemProps) {
       style={styles.projectCard}
       onPress={() => onPress(project.id)}
       activeOpacity={0.7}
+      testID={testID}
+      accessibilityLabel={testID}
     >
       <View style={styles.projectHeader}>
         <Text style={styles.projectTitle} numberOfLines={1}>
@@ -69,12 +77,16 @@ function ProjectListItem({ project, comments, onPress }: ProjectListItemProps) {
 
 interface ProjectsListScreenProps {
   currentUserId: string;
+  currentUserEmail: string;
   onProjectPress: (projectId: string) => void;
+  onLogoutPress: () => Promise<void>;
 }
 
 export function ProjectsListScreen({
   currentUserId,
+  currentUserEmail,
   onProjectPress,
+  onLogoutPress,
 }: ProjectsListScreenProps) {
   const {
     projectsCollection,
@@ -124,43 +136,72 @@ export function ProjectsListScreen({
   const projects = projectsData ? Array.from(projectsData) : [];
   const comments = commentsData ? Array.from(commentsData) : [];
 
-  if (projects.length === 0) {
-    return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.emptyTitle}>No Projects Assigned</Text>
-        <Text style={styles.emptySubtext}>
-          You don't have any projects assigned to you yet.
-        </Text>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <View>
-            <Text style={styles.headerTitle}>My Projects</Text>
+          <View style={styles.headerCopy}>
+            <Text
+              style={styles.headerTitle}
+              testID={projects.length > 0 ? "projects-header-title" : undefined}
+              accessibilityLabel={
+                projects.length > 0 ? "projects-header-title" : undefined
+              }
+            >
+              My Projects
+            </Text>
             <Text style={styles.headerSubtitle}>
               {projects.length} assigned
             </Text>
+            <Text style={styles.headerUser}>{currentUserEmail}</Text>
           </View>
-          <SyncStatusIndicator isConnected={isConnected} />
+          <View style={styles.headerActions}>
+            <SyncStatusIndicator isConnected={isConnected} />
+            <TouchableOpacity
+              style={styles.logoutButton}
+              onPress={() => {
+                void onLogoutPress().catch(() => undefined);
+              }}
+              testID="projects-logout-button"
+              accessibilityLabel="projects-logout-button"
+            >
+              <Text style={styles.logoutButtonText}>Logout</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
-      <FlatList
-        data={projects}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <ProjectListItem
-            project={item}
-            comments={comments}
-            onPress={onProjectPress}
-          />
-        )}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
+
+      {projects.length === 0 ? (
+        <View style={styles.centerContainer}>
+          <Text
+            style={styles.emptyTitle}
+            testID="projects-empty-title"
+            accessibilityLabel="projects-empty-title"
+          >
+            No Projects Assigned
+          </Text>
+          <Text style={styles.emptySubtext}>
+            You don't have any projects assigned to you yet.
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={projects}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item, index }) => (
+            <ProjectListItem
+              project={item}
+              comments={comments}
+              onPress={onProjectPress}
+              testID={
+                index === 0 ? "project-card-first" : `project-card-${item.id}`
+              }
+            />
+          )}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </View>
   );
 }
@@ -186,6 +227,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
+    gap: 16,
+  },
+  headerCopy: {
+    flex: 1,
+  },
+  headerActions: {
+    alignItems: "flex-end",
+    gap: 10,
   },
   headerTitle: {
     fontSize: 28,
@@ -196,6 +245,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: theme.color.muted,
     marginTop: 4,
+  },
+  headerUser: {
+    fontSize: 13,
+    color: theme.color.muted,
+    marginTop: 6,
+  },
+  logoutButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: theme.color.surface,
+  },
+  logoutButtonText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: theme.color.ink,
   },
   listContent: {
     padding: 16,

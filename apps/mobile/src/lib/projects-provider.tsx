@@ -10,8 +10,6 @@ import {
   ProjectsCollection,
   CommentsCollection,
 } from "./collections";
-import { PowerSyncConnector } from "./powersync-connector";
-import { connectPowerSync } from "./powersync-database";
 
 interface ProjectsContextValue {
   db: PowerSyncDatabase | null;
@@ -37,12 +35,14 @@ interface ProjectsProviderProps {
   children: React.ReactNode;
   apiOrigin: string;
   powerSyncEndpoint: string;
+  dbFilename?: string;
 }
 
 export function ProjectsProvider({
   children,
   apiOrigin,
   powerSyncEndpoint,
+  dbFilename,
 }: ProjectsProviderProps) {
   const [db, setDb] = useState<PowerSyncDatabase | null>(null);
   const [projectsCollection, setProjectsCollection] =
@@ -55,6 +55,14 @@ export function ProjectsProvider({
 
   useEffect(() => {
     let mounted = true;
+    let powerSyncDb: PowerSyncDatabase | null = null;
+
+    setDb(null);
+    setProjectsCollection(null);
+    setCommentsCollection(null);
+    setIsConnected(false);
+    setIsLoading(true);
+    setError(null);
 
     async function init() {
       try {
@@ -62,25 +70,37 @@ export function ProjectsProvider({
         const { createPowerSyncDatabase, connectPowerSync } =
           await import("./powersync-database");
 
-        const { db: powerSyncDb, connector } = createPowerSyncDatabase({
+        const { db: nextDb, connector } = createPowerSyncDatabase({
           apiOrigin,
           powerSyncEndpoint,
+          dbFilename,
         });
 
-        if (!mounted) return;
+        powerSyncDb = nextDb;
 
-        setDb(powerSyncDb);
-        setProjectsCollection(createProjectsCollection(powerSyncDb));
-        setCommentsCollection(createCommentsCollection(powerSyncDb));
+        if (!mounted) {
+          await nextDb.close();
+          return;
+        }
 
-        // Connect to PowerSync service
-        await connectPowerSync(powerSyncDb, connector);
+        setDb(nextDb);
+        setProjectsCollection(createProjectsCollection(nextDb));
+        setCommentsCollection(createCommentsCollection(nextDb));
 
-        if (!mounted) return;
+        await connectPowerSync(nextDb, connector);
+
+        if (!mounted) {
+          await nextDb.disconnectAndClear();
+          await nextDb.close();
+          return;
+        }
 
         setIsConnected(true);
       } catch (err) {
-        if (!mounted) return;
+        if (!mounted) {
+          return;
+        }
+
         setError(err instanceof Error ? err : new Error(String(err)));
       } finally {
         if (mounted) {
@@ -89,12 +109,23 @@ export function ProjectsProvider({
       }
     }
 
-    init();
+    void init();
 
     return () => {
       mounted = false;
+
+      if (powerSyncDb) {
+        const dbToDispose = powerSyncDb;
+
+        void dbToDispose
+          .disconnectAndClear()
+          .catch(() => undefined)
+          .finally(() => {
+            void dbToDispose.close().catch(() => undefined);
+          });
+      }
     };
-  }, [apiOrigin, powerSyncEndpoint]);
+  }, [apiOrigin, powerSyncEndpoint, dbFilename]);
 
   return (
     <ProjectsContext.Provider
