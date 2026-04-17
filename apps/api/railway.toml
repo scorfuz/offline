@@ -1,10 +1,10 @@
 [build]
 builder = "RAILPACK"
-buildCommand = "pnpm --filter @base-template/api build"
+buildCommand = "pnpm --filter @offline/api build"
 watchPatterns = []
 
 [deploy]
-startCommand = "pnpm --filter @base-template/api start"
+startCommand = "pnpm --filter @offline/api start"
 healthcheckPath = "/health"
 healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"
