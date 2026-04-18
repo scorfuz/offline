@@ -327,6 +327,25 @@ describe("POST /api/projects", () => {
     assert.ok(body.id);
   });
 
+  it("preserves a client-provided id for offline-created projects", async () => {
+    const clientId = "project-client-generated-id";
+
+    const res = await api("/api/projects", {
+      method: "POST",
+      headers: { "content-type": "application/json", cookie: adminCookie },
+      body: JSON.stringify({
+        id: clientId,
+        title: "Offline-created project",
+        assignedTechId: techUserId,
+      }),
+    });
+
+    assert.equal(res.status, 201);
+    const body = (await res.json()) as { id: string; title: string };
+    assert.equal(body.id, clientId);
+    assert.equal(body.title, "Offline-created project");
+  });
+
   it("tech cannot create a project", async () => {
     const res = await api("/api/projects", {
       method: "POST",

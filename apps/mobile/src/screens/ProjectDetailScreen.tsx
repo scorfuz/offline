@@ -20,6 +20,7 @@ import {
 } from "react-native";
 import { useLiveQuery } from "@tanstack/react-db";
 import { eq } from "@tanstack/react-db";
+import type { InitialQueryBuilder } from "@tanstack/react-db";
 import { theme } from "@offline/ui";
 import { useProjects } from "../lib/projects-provider";
 import {
@@ -37,9 +38,6 @@ interface ProjectDetailScreenProps {
   onViewComments: (projectId: string) => void;
 }
 
-// All statuses for reference
-const ALL_STATUSES: ProjectStatus[] = ["open", "in_progress", "completed"];
-
 export function ProjectDetailScreen({
   projectId,
   currentUserId,
@@ -52,19 +50,18 @@ export function ProjectDetailScreen({
 
   // Query the specific project
   const { data: projectData } = useLiveQuery(
-    (q) =>
+    (q: Readonly<InitialQueryBuilder>) =>
       projectsCollection
         ? q
             .from({ project: projectsCollection })
             .where(({ project }) => eq(project.id, projectId))
-            .limit(1)
         : null,
     [projectsCollection, projectId]
   );
 
   // Query comments count for this project
   const { data: commentsData } = useLiveQuery(
-    (q) =>
+    (q: Readonly<InitialQueryBuilder>) =>
       commentsCollection
         ? q
             .from({ comment: commentsCollection })
@@ -79,7 +76,7 @@ export function ProjectDetailScreen({
 
   const comments = commentsData ? Array.from(commentsData) : [];
 
-  const handleStatusChange = async (newStatus: ProjectStatus) => {
+  const handleStatusChange = (newStatus: ProjectStatus) => {
     if (!project || !projectsCollection) return;
 
     // Validate transition
@@ -87,16 +84,18 @@ export function ProjectDetailScreen({
     const validTransitions = VALID_STATUS_TRANSITIONS[currentStatus];
 
     if (!validTransitions.includes(newStatus)) {
+      const fromLabel = getStatusLabel(currentStatus);
+      const toLabel = getStatusLabel(newStatus);
       Alert.alert(
         "Invalid Status Change",
-        `Cannot change status from ${getStatusLabel(currentStatus)} to ${getStatusLabel(newStatus)}`
+        `Cannot change status from ${fromLabel} to ${toLabel}`
       );
       return;
     }
 
     setUpdating(true);
     try {
-      await projectsCollection.update(project.id, (draft) => {
+      projectsCollection.update(project.id, (draft) => {
         draft.status = newStatus;
         draft.updated_at = new Date().toISOString();
       });
@@ -211,7 +210,9 @@ export function ProjectDetailScreen({
                     { borderColor: getStatusColor(status) },
                     updating && styles.statusButtonDisabled,
                   ]}
-                  onPress={() => handleStatusChange(status)}
+                  onPress={() => {
+                    void handleStatusChange(status);
+                  }}
                   disabled={updating}
                   testID={`project-status-${status}`}
                   accessibilityLabel={`project-status-${status}`}

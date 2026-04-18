@@ -138,6 +138,21 @@ describe("POST /api/projects/:projectId/comments", () => {
     assert.equal(body.authorId, techUserId);
   });
 
+  it("preserves a client-provided id for offline-created comments", async () => {
+    const clientId = "comment-client-generated-id";
+
+    const res = await api(`/api/projects/${testProjectId}/comments`, {
+      method: "POST",
+      headers: { "content-type": "application/json", cookie: techCookie },
+      body: JSON.stringify({ id: clientId, text: "Offline comment" }),
+    });
+
+    assert.equal(res.status, 201);
+    const body = (await res.json()) as { id: string; text: string };
+    assert.equal(body.id, clientId);
+    assert.equal(body.text, "Offline comment");
+  });
+
   it("rejects empty text", async () => {
     const res = await api(`/api/projects/${testProjectId}/comments`, {
       method: "POST",

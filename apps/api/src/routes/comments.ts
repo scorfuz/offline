@@ -74,10 +74,11 @@ async function listComments(
     return true;
   }
 
+  const projectFilter = eq(comments.projectId, projectId);
   const rows = await ctx.database.db
     .select()
     .from(comments)
-    .where(eq(comments.projectId, projectId))
+    .where(projectFilter)
     .orderBy(comments.createdAt);
 
   const formattedComments = rows.map(formatComment);
@@ -103,16 +104,17 @@ async function createComment(
     return true;
   }
 
-  const id = randomUUID();
+  const id = body.id ?? randomUUID();
   const now = new Date();
 
+  const trimmedText = body.text.trim();
   const rows = await ctx.database.db
     .insert(comments)
     .values({
       id,
       projectId,
       authorId: user.userId,
-      text: body.text.trim(),
+      text: trimmedText,
       createdAt: now,
       updatedAt: now,
     })
@@ -134,10 +136,11 @@ async function updateComment(
     return true;
   }
 
+  const byCommentId = eq(comments.id, commentId);
   const [existing] = await ctx.database.db
     .select()
     .from(comments)
-    .where(eq(comments.id, commentId));
+    .where(byCommentId);
 
   if (!existing) {
     sendJson(ctx.response, 404, ApiError, { error: "Comment not found" });
@@ -156,10 +159,11 @@ async function updateComment(
     return true;
   }
 
+  const trimmedText = body.text.trim();
   const rows = await ctx.database.db
     .update(comments)
-    .set({ text: body.text.trim(), updatedAt: new Date() })
-    .where(eq(comments.id, commentId))
+    .set({ text: trimmedText, updatedAt: new Date() })
+    .where(byCommentId)
     .returning();
 
   const updated = formatComment(rows[0]!);
@@ -178,10 +182,11 @@ async function deleteComment(
     return true;
   }
 
+  const byCommentId = eq(comments.id, commentId);
   const [existing] = await ctx.database.db
     .select()
     .from(comments)
-    .where(eq(comments.id, commentId));
+    .where(byCommentId);
 
   if (!existing) {
     sendJson(ctx.response, 404, ApiError, { error: "Comment not found" });
@@ -193,7 +198,7 @@ async function deleteComment(
     return true;
   }
 
-  await ctx.database.db.delete(comments).where(eq(comments.id, commentId));
+  await ctx.database.db.delete(comments).where(byCommentId);
 
   sendJson(ctx.response, 200, ApiSuccess, { success: true });
   return true;

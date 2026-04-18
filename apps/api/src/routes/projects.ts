@@ -74,10 +74,11 @@ async function listProjects(ctx: RouteContext): Promise<boolean> {
       .from(projects)
       .orderBy(projects.createdAt);
   } else {
+    const assignedToUser = eq(projects.assignedTechId, user.userId);
     rows = await ctx.database.db
       .select()
       .from(projects)
-      .where(eq(projects.assignedTechId, user.userId))
+      .where(assignedToUser)
       .orderBy(projects.createdAt);
   }
 
@@ -106,15 +107,17 @@ async function createProject(ctx: RouteContext): Promise<boolean> {
     return true;
   }
 
-  const id = randomUUID();
+  const id = body.id ?? randomUUID();
   const now = new Date();
 
+  const trimmedTitle = body.title.trim();
+  const trimmedDescription = body.description?.trim() ?? "";
   const rows = await ctx.database.db
     .insert(projects)
     .values({
       id,
-      title: body.title.trim(),
-      description: body.description?.trim() ?? "",
+      title: trimmedTitle,
+      description: trimmedDescription,
       status: body.status ?? "open",
       assignedTechId: body.assignedTechId ?? null,
       createdById: user.userId,
@@ -128,6 +131,22 @@ async function createProject(ctx: RouteContext): Promise<boolean> {
   return true;
 }
 
+function buildProjectUpdates(
+  body: typeof UpdateProjectRequest.Type
+): Record<string, unknown> {
+  return {
+    updatedAt: new Date(),
+    ...(body.title !== undefined && { title: body.title.trim() }),
+    ...(body.description !== undefined && {
+      description: body.description.trim(),
+    }),
+    ...(body.status !== undefined && { status: body.status }),
+    ...(body.assignedTechId !== undefined && {
+      assignedTechId: body.assignedTechId,
+    }),
+  };
+}
+
 // PUT /api/projects/:id
 async function updateProject(
   ctx: RouteContext,
@@ -139,10 +158,11 @@ async function updateProject(
     return true;
   }
 
+  const byProjectId = eq(projects.id, projectId);
   const [existing] = await ctx.database.db
     .select()
     .from(projects)
-    .where(eq(projects.id, projectId));
+    .where(byProjectId);
 
   if (!existing) {
     sendJson(ctx.response, 404, ApiError, { error: "Project not found" });
@@ -172,22 +192,11 @@ async function updateProject(
     }
   }
 
-  const updates: Record<string, unknown> = {
-    updatedAt: new Date(),
-    ...(body.title !== undefined && { title: body.title.trim() }),
-    ...(body.description !== undefined && {
-      description: body.description.trim(),
-    }),
-    ...(body.status !== undefined && { status: body.status }),
-    ...(body.assignedTechId !== undefined && {
-      assignedTechId: body.assignedTechId,
-    }),
-  };
-
+  const updates = buildProjectUpdates(body);
   const rows = await ctx.database.db
     .update(projects)
     .set(updates)
-    .where(eq(projects.id, projectId))
+    .where(byProjectId)
     .returning();
 
   const updated = formatProject(rows[0]!);
@@ -211,9 +220,10 @@ async function deleteProject(
     return true;
   }
 
+  const byProjectId = eq(projects.id, projectId);
   const [deleted] = await ctx.database.db
     .delete(projects)
-    .where(eq(projects.id, projectId))
+    .where(byProjectId)
     .returning();
 
   if (!deleted) {

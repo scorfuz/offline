@@ -63,9 +63,12 @@ export type CurrentUserResponse = typeof CurrentUserResponse.Type;
 
 const optionalString = Schema.optional(Schema.String);
 const optionalProjectStatus = Schema.optional(ProjectStatus);
-const optionalNullableString = Schema.optional(Schema.NullOr(Schema.String));
+const nullableString = Schema.NullOr(Schema.String);
+const optionalNullableString = Schema.optional(nullableString);
+const optionalId = Schema.optional(Schema.String);
 
 export const CreateProjectRequest = Schema.Struct({
+  id: optionalId,
   title: Schema.String,
   description: optionalString,
   status: optionalProjectStatus,
@@ -88,6 +91,7 @@ export const ProjectsResponse = Schema.Array(Project);
 export type ProjectsResponse = typeof ProjectsResponse.Type;
 
 export const CreateCommentRequest = Schema.Struct({
+  id: optionalId,
   text: Schema.String,
 });
 

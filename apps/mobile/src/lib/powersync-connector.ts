@@ -9,6 +9,11 @@ import type {
 } from "@powersync/react-native";
 import { UpdateType } from "@powersync/react-native";
 
+interface TokenApiResponse {
+  token?: string;
+  expiresAt?: number;
+}
+
 export interface PowerSyncConnectorOptions {
   apiOrigin: string;
   powerSyncEndpoint: string;
@@ -45,7 +50,7 @@ export class PowerSyncConnector implements PowerSyncBackendConnector {
       );
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as unknown as TokenApiResponse;
 
     if (!data.token) {
       throw new Error("Invalid token response from API");
@@ -62,7 +67,9 @@ export class PowerSyncConnector implements PowerSyncBackendConnector {
    * Upload data to API when local changes need to sync to server
    * Called by PowerSync when there are local mutations to upload
    */
-  async uploadData(database: AbstractPowerSyncDatabase): Promise<void> {
+  async uploadData(
+    database: Readonly<AbstractPowerSyncDatabase>
+  ): Promise<void> {
     const batch = await database.getCrudBatch();
 
     if (!batch || batch.crud.length === 0) {
@@ -109,19 +116,37 @@ export class PowerSyncConnector implements PowerSyncBackendConnector {
     data: Record<string, unknown>
   ): Promise<void> {
     let endpoint: string;
+    let body: Record<string, unknown>;
+
     switch (table) {
       case "comments":
-        endpoint = `/api/projects/${data.project_id}/comments`;
+        endpoint = `/api/projects/${String(data.project_id)}/comments`;
+        body = {
+          id,
+          text: data.text,
+        };
+        break;
+      case "projects":
+        endpoint = "/api/projects";
+        body = {
+          id,
+          title: data.title,
+          description: data.description,
+          status: data.status,
+          assignedTechId: data.assigned_tech_id ?? null,
+        };
         break;
       default:
         endpoint = `/api/${table}`;
+        body = { id, ...data };
     }
 
+    const serializedBody = JSON.stringify(body);
     const response = await fetch(`${this.apiOrigin}${endpoint}`, {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: serializedBody,
     });
 
     if (!response.ok) {
@@ -139,11 +164,12 @@ export class PowerSyncConnector implements PowerSyncBackendConnector {
     const endpoint =
       table === "comments" ? `/api/comments/${id}` : `/api/${table}/${id}`;
 
+    const serializedData = JSON.stringify(data);
     const response = await fetch(`${this.apiOrigin}${endpoint}`, {
       method: "PUT",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: serializedData,
     });
 
     if (!response.ok) {
